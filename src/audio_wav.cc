@@ -1,6 +1,6 @@
-#include "nanosnp.h"
+#include "nanosnap/nanosnap.h"
 
-#ifdef NANOSNP_NO_STDIO
+#ifdef NANOSNAP_NO_STDIO
 #ifndef DR_WAV_NO_STDIO
 #define DR_WAV_NO_STDIO
 #endif
@@ -30,11 +30,12 @@
 #pragma GCC diagnostic pop
 #endif
 
-namespace nanosnp {
+namespace nanosnap {
 
-bool wav_read(const std::string &filename, int *rate, std::string *dtype,
-              int *channels, std::vector<uint8_t> *data, std::string *err) {
-#ifdef NANOSNP_NO_STDIO
+bool wav_read(const std::string &filename, uint32_t *rate, std::string *dtype,
+              uint32_t *channels, uint64_t *samples, std::vector<uint8_t> *data,
+              std::string *err) {
+#ifdef NANOSNAP_NO_STDIO
   (void)filename;
   (void)rate;
   (void)dtype;
@@ -53,42 +54,98 @@ bool wav_read(const std::string &filename, int *rate, std::string *dtype,
     if (err) {
       (*err) += "nullptr is set to `rate` parameter.\n";
     }
+    return false;
   }
 
   if (!channels) {
     if (err) {
       (*err) += "nullptr is set to `channels` parameter.\n";
     }
+    return false;
   }
 
   if (!dtype) {
     if (err) {
       (*err) += "nullptr is set to `dtype` parameter.\n";
     }
+    return false;
   }
 
   if (!data) {
     if (err) {
       (*err) += "nullptr is set to `data` parameter.\n";
     }
+    return false;
   }
 
-  drwav wav;
-  if (!drwav_init_file(&wav, filename.c_str())) {
+  drwav *pwav = drwav_open_file(filename.c_str());
+
+  if (!pwav) {
     if (err) {
-      (*err) += "Error opening WAV file. File not found or not a WAV file? : " + filename + "\n";
+      (*err) += "Error opening WAV file. File not found or not a WAV file? : " +
+                filename + "\n";
     }
     return false;
   }
 
+  if (pwav->bitsPerSample == 8) {
+    (*dtype) = "uint8";
+  } else if (pwav->bitsPerSample == 16) {
+    (*dtype) = "int16";
+  } else if (pwav->bitsPerSample == 32) {
+    if (pwav->fmt.formatTag == DR_WAVE_FORMAT_IEEE_FLOAT) {
+      (*dtype) = "float32";
+    } else {
+      (*dtype) = "float32";
+    }
+  } else if ((pwav->bitsPerSample == 64) &&
+             (pwav->fmt.formatTag == DR_WAVE_FORMAT_IEEE_FLOAT)) {
+    (*dtype) = "float64";
+  } else {
+    if (err) {
+      (*err) = "Unsupported format type. bitsPerSample = " +
+               std::to_string(int(pwav->bitsPerSample)) +
+               ", format = " + std::to_string(int(pwav->fmt.formatTag)) + "\n";
+    }
+
+    drwav_close(pwav);
+
+    return false;
+  }
+
+  size_t data_len = size_t(pwav->totalPCMFrameCount * pwav->channels *
+                           (pwav->bitsPerSample / 8));
+  data->resize(data_len);
+  drwav_uint64 frame_bytes_read = drwav_read_pcm_frames(
+      pwav, pwav->totalPCMFrameCount, reinterpret_cast<void *>(data->data()));
+
+  if (frame_bytes_read != pwav->totalPCMFrameCount) {
+    if (err) {
+      (*err) = "The number of frames read(" + std::to_string(frame_bytes_read) +
+               ") does not match PCM frames(" +
+               std::to_string(pwav->totalPCMFrameCount) + ")\n";
+    }
+
+    drwav_close(pwav);
+
+    return false;
+  }
+
+  (*channels) = pwav->channels;
+  (*rate) = pwav->sampleRate;
+  (*samples) = pwav->totalPCMFrameCount;
+
+  drwav_close(pwav);
+
   return true;
 
-#endif  // NANOSNP_NO_STDIO
+#endif  // NANOSNAP_NO_STDIO
 }
 
-bool wav_write(const std::string &filename, const int rate, const std::string &dtype,
-               const int channels, const std::vector<uint8_t> &data, std::string *err) {
-#ifdef NANOSNP_NO_STDIO
+bool wav_write(const std::string &filename, const uint32_t rate,
+               const std::string &dtype, const uint32_t channels,
+               const uint64_t samples, const uint8_t *data, std::string *err) {
+#ifdef NANOSNAP_NO_STDIO
   (void)filename;
   (void)rate;
   (void)dtype;
@@ -103,41 +160,43 @@ bool wav_write(const std::string &filename, const int rate, const std::string &d
   return false;
 #else
 
-  if (!rate) {
-    if (err) {
-      (*err) += "nullptr is set to `rate` parameter.\n";
-    }
+  drwav_uint32 bps = 0;
+  if (dtype.compare("float32") == 0) {
+    bps = 32;
+  } else if (dtype.compare("int32") == 0) {
+    bps = 32;
+  } else if (dtype.compare("int16") == 0) {
+    bps = 16;
+  } else if (dtype.compare("uint8") == 0) {
+    bps = 8;
   }
 
-  if (!channels) {
-    if (err) {
-      (*err) += "nullptr is set to `channels` parameter.\n";
-    }
-  }
+  assert(bps > 0);
 
-  if (!dtype) {
-    if (err) {
-      (*err) += "nullptr is set to `dtype` parameter.\n";
-    }
-  }
+  drwav_data_format data_format;
+  data_format.container = drwav_container_riff;
+  data_format.format = DR_WAVE_FORMAT_PCM;
+  data_format.channels = channels;
+  data_format.sampleRate = rate;
+  data_format.bitsPerSample = bps;
 
-  if (!data) {
-    if (err) {
-      (*err) += "nullptr is set to `data` parameter.\n";
-    }
-  }
-
-  drwav wav;
-  if (!drwav_init_file(&wav, filename.c_str())) {
-    if (err) {
-      (*err) += "Error opening WAV file. File not found or not a WAV file? : " + filename + "\n";
-    }
+  drwav *pwav = drwav_open_file_write(filename.c_str(), &data_format);
+  if (!pwav) {
+    (*err) +=
+        "Failed to open WAV file to write. WAV format(channels/rate) is "
+        "invalid or cannot write to disk : " +
+        filename + "\n";
     return false;
   }
 
+  (void)data;
+  (void)samples;
+
+  drwav_close(pwav);
+
   return true;
 
-#endif  // NANOSNP_NO_STDIO
+#endif  // !NANOSNAP_NO_STDIO
 }
 
-}  // namespace nanosnp
+}  // namespace nanosnap

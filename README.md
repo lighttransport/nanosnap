@@ -1,6 +1,6 @@
-# NanoSNP, Nanoscale Signal, Audio and Noise Processing library in C++11
+# NanoSNAP, Nanoscale Signal, Noise and Audio Processing library in C++11
 
-NanoSNP is a small and portable signal, audio and noise processing library in C++11.
+NanoSNAP is a small and portable signal, audio and noise processing library in C++11. 🤞
 
 ## Install
 
@@ -8,7 +8,7 @@ Simply copy `include` and `src` folder to your platform.
 
 ## Requirements
 
-* CMake(for building examples and tests, and build NanoSNP as submodules)
+* CMake(for building examples and tests, and build NanoSNAP as submodules)
 * C++11 compiler
 
 ## Supported platform
@@ -28,36 +28,49 @@ $ cmake ..
 $ make
 ```
 
+### Build and running tests
+
+```
+$ mkdir build
+$ cd build
+$ cmake -DNANOSNAP_ENABLE_TESTS=On ..
+$ make
+$ ./bin/test_nanosnap
+```
+
+### CMake option for developers
+
+* `-DSANITIZE_ADDRESS=On` : Enable ASan.
+
 ## Features
 
-| NanoSNP                | Python equivalent                   |
-| ---------------------- | ----------------------------------- |
-| `medfilt`              | `scipy.signal.medfilt`              |
-| `wav_read`             | `scipy.io.wavfile.read`             |
-| `wav_read_from_buffer` | Read WAV from buffer(memory)        |
-| `wav_write`            | `scipy.io.wavfile.write`            |
-| `wav_write_to_buffer`  | Write WAV to buffer(memory)         |
-|                        | `python_speech_features.fbank`      |
-|                        | `python_speech_features.logfbank`   |
-|                        | `python_speech_features.mfcc`       |
-|                        | `python_speech_features.ssc`        |
+| NanoSNAP               | Description        | Python equivalent                   |
+| ---------------------- | ------------------ | ----------------------------------- |
+| `medfilt`              | Median filter      | `scipy.signal.medfilt`              |
+| `wav_read`             | Read .WAV file     | `scipy.io.wavfile.read`             |
+| `wav_write`            | Save .WAV file     | `scipy.io.wavfile.write`            |
 
 ## Compiler macros
 
-* `NANOSNP_NO_STDIO` Disable IO. e.g. `wav_read` is not available. This feature is useful when you want to use NanoSNP in Android or embedded devices.
+* `NANOSNAP_NO_STDIO` Disable IO. e.g. `wav_read` is not available. This feature is useful when you want to use NanoSNAP in Android or embedded devices.
 
 ## TODO
 
+* [ ] Read/write WAV from buffer(memory)
+* [ ] Integrate with NanoNumCp
+* [ ] Port `python_speech_features`
+  * [ ] `python_speech_features.fbank`
+  * [ ] `python_speech_features.logfbank`
+  * [ ] `python_speech_features.mfcc`
+  * [ ] `python_speech_features.ssc`
 * [ ] Write our own FFT routine.
 
 ## License
 
-NanoSNP is licensed under MIT license.
+NanoSNAP is licensed under MIT license.
 
 ### Third party licenses.
 
 * doctest : The MIT License (MIT). Copyright (c) 2016-2019 Viktor Kirilov
 * dr_wav : Public domain or MIT-0. By David Reid.
 * fft2d : Very permissive license. See `src/fft2d/readme.txt` for details. Copyright(C) 1996-2001 Takuya OOURA
-
-* T.B.W.

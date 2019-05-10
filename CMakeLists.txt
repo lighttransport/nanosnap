@@ -3,15 +3,15 @@ cmake_minimum_required(VERSION 3.5.1)
 # ------------------------------------------------------------------------------
 # ----------------------------------- Options ----------------------------------
 # ------------------------------------------------------------------------------
-option(NANOSNP_BUILD_EXAMPLE "Build NanoSNP example codes" ON)
-option(NANOSNP_BUILD_TEST "Build NanoSNP test codes" ON)
-message(STATUS "NanoSNP: Build examples: ${BUILD_EXAMPLE}, tests: ${BUILD_TEST}")
+option(NANOSNAP_BUILD_EXAMPLES "Build NanoSNAP example codes" ON)
+option(NANOSNAP_BUILD_TESTS "Build NanoSNAP test codes" ON)
+message(STATUS "NanoSNAP: Build examples: ${BUILD_EXAMPLES}, tests: ${BUILD_TESTS}")
 
 
 # ------------------------------------------------------------------------------
 # ----------------------------------- Common -----------------------------------
 # ------------------------------------------------------------------------------
-project(nanosnp CXX C)
+project(nanosnap CXX C)
 set (CMAKE_CXX_STANDARD 11)  # C++ 11
 
 # Print make commands for debug
@@ -50,40 +50,27 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 #     ${PROJECT_SOURCE_DIR}/third_party
 # )
 
-# ------------------------------- libnanosnp.so -------------------------------
-add_library(nanosnp SHARED
+# ------------------------------- libnanosnap.so -------------------------------
+add_library(nanosnap SHARED
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
 )
-add_sanitizers(nanosnp)
+add_sanitizers(nanosnap)
 
 if (WIN32)
-    set_target_properties(nanosnp PROPERTIES
-        OUTPUT_NAME libnanosnp
+    set_target_properties(nanosnap PROPERTIES
+        OUTPUT_NAME libnanosnap
     )
-endif()
-
-if (NANOSNP_BUILD_EXAMPLE OR NANOSNP_BUILD_TEST)
-    add_library(nanosnp_test STATIC
-        ${PROJECT_SOURCE_DIR}/tests/main.cc
-    )
-
-    target_include_directories(nanosnp_test PRIVATE ${PROJECT_SOURCE_DIR}/third_party/doctest)
-    add_sanitizers(nanosnp_test)
-
-    if (WIN32)
-        set_target_properties(nanosnp_test PROPERTIES
-            OUTPUT_NAME libnanosnp_test
-        )
-    endif()
 endif()
 
 # ------------------------------ test executables ------------------------------
-#if (BUILD_TEST)
-#    add_executable(test_funcs
-#        ${PROJECT_SOURCE_DIR}/tests/test_funcs.cpp
-#    )
-#    target_link_libraries(test_funcs nanosnp nanosnp_test)
-#    target_link_libraries(test_funcs glad glfw ${OPENGL_LIBRARY})
-#    add_sanitizers(test_funcs)
-#endif()
+if (NANOSNAP_BUILD_TESTS)
+    add_executable(test_nanosnap
+        ${PROJECT_SOURCE_DIR}/tests/main.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_audio.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_medfilt1.cc
+    )
+    target_include_directories(test_nanosnap PRIVATE ${PROJECT_SOURCE_DIR}/third_party/doctest)
+    target_link_libraries(test_nanosnap nanosnap)
+    add_sanitizers(test_nanosnap)
+endif()
