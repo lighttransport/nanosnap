@@ -1,7 +1,8 @@
 #include "nanosnap/nanosnap.h"
 
+#include "stack_vector.h"
+
 #include <cmath>
-#include <iostream> // dbg
 
 namespace nanosnap {
 
@@ -32,17 +33,9 @@ static inline float find_median(const size_t n, float *a) {
     }
 
     if (iMin != j) {
-      std::cout << "a[j] = " << a[j] << ", a[iMin] = " << a[iMin] << std::endl;
       std::swap(a[j], a[iMin]);
-      std::cout << "swap: a[j] = " << a[j] << ", a[iMin] = " << a[iMin] << std::endl;
     }
   }
-
-  std::cout << "a = " << std::endl;
-  for (size_t i = 0 ; i < n; i++) {
-    std::cout << a[i] << std::endl;
-  }
-  std::cout << "med = " << a[n/2+1] << std::endl;
 
   // We know the window size is odd, thus a[n / 2] is the median value.
   return a[(n >> 1)];
@@ -58,14 +51,14 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
   // TODO(LTE): Handle these parameters.
   (void)padding;
 
-  // TODO(LTE): Use stack vector
-  std::vector<float> buf;
+  StackVector<float, 64> buf;
+  buf->resize(size_t(k * k));
 
   // TODO(LTE): Test if k < 2
 
   int m = (k - 1) / 2;
   for (ssize_t i = 0; i < ssize_t(n); i++) {
-    buf.clear();
+    buf->clear();
     for (ssize_t r = -m; r <= m; r++) {
       ssize_t j = i + r;
 
@@ -83,11 +76,10 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
         }
       }
 
-      buf.push_back(v);
-      std::cout << "a = " << v << std::endl;
+      buf->push_back(v);
     }
 
-    y[i] = find_median(size_t(k), buf.data());
+    y[i] = find_median(size_t(k), buf->data());
   }
 
   return true;

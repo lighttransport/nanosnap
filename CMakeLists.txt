@@ -54,6 +54,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_library(nanosnap SHARED
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
+    ${PROJECT_SOURCE_DIR}/src/speech_features.cc
 )
 add_sanitizers(nanosnap)
 
@@ -68,6 +69,7 @@ if (NANOSNAP_BUILD_TESTS)
     add_executable(test_nanosnap
         ${PROJECT_SOURCE_DIR}/tests/main.cc
         ${PROJECT_SOURCE_DIR}/tests/test_audio.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_speech_features.cc
         ${PROJECT_SOURCE_DIR}/tests/test_medfilt1.cc
     )
     target_include_directories(test_nanosnap PRIVATE ${PROJECT_SOURCE_DIR}/third_party/doctest)

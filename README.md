@@ -38,11 +38,18 @@ $ make
 $ ./bin/test_nanosnap
 ```
 
+### Compiler macros
+
+* `NANOSNAP_NO_STDIO` Disable IO. e.g. `wav_read` is not available. This feature is useful when you want to use NanoSNAP in Android or embedded devices.
+
+
 ### CMake option for developers
 
 * `-DSANITIZE_ADDRESS=On` : Enable ASan.
 
 ## Features
+
+### Scipy
 
 | NanoSNAP               | Description        | Python equivalent                   |
 | ---------------------- | ------------------ | ----------------------------------- |
@@ -50,9 +57,15 @@ $ ./bin/test_nanosnap
 | `wav_read`             | Read .WAV file     | `scipy.io.wavfile.read`             |
 | `wav_write`            | Save .WAV file     | `scipy.io.wavfile.write`            |
 
-## Compiler macros
+### Python speech features
 
-* `NANOSNAP_NO_STDIO` Disable IO. e.g. `wav_read` is not available. This feature is useful when you want to use NanoSNAP in Android or embedded devices.
+| NanoSNAP               | Description        | Python equivalent                   |
+| ---------------------- | ------------------ | ----------------------------------- |
+| `mel2hz`               | Mel to Hz          | `mel2hz`                            |
+| `hz2mel`               | Hz to Mel          | `hz2mel`                            |
+| `lifter`               |                    | `lifter`                            |
+| `fbank`                |                    | `fbank`                             |
+
 
 ## TODO
 
@@ -71,6 +84,9 @@ NanoSNAP is licensed under MIT license.
 
 ### Third party licenses.
 
+* stack_vector.h : Copyright (c) 2006-2008 The Chromium Authors. All rights reserved. Use of this source code is governed by a BSD-style license.
 * doctest : The MIT License (MIT). Copyright (c) 2016-2019 Viktor Kirilov
 * dr_wav : Public domain or MIT-0. By David Reid.
 * fft2d : Very permissive license. See `src/fft2d/readme.txt` for details. Copyright(C) 1996-2001 Takuya OOURA
+* python_speech_features : The MIT License (MIT). Copyright (c) 2013 James Lyons. https://github.com/jameslyons/python_speech_features
+

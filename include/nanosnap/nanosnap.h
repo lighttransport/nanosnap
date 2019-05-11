@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include <string>
 #include <vector>
 
+#include <cmath>
+
 namespace nanosnap {
 
 ///
@@ -48,8 +50,8 @@ namespace nanosnap {
 ///
 /// @return false when Window size is not odd number.
 ///
-bool medfilt1(const size_t n, const float *x, const int k, float *y, bool include_nan = false, bool padding = true);
-
+bool medfilt1(const size_t n, const float *x, const int k, float *y,
+              bool include_nan = false, bool padding = true);
 
 ///
 /// Median filter
@@ -74,9 +76,12 @@ void medfilt(float x, float *y);
 /// @param[out] data WAV data(opaque binary data)
 /// @param[out] err Error or warning message(optional)
 ///
-/// @return true upon success. Return false when error or NanoSNAP is compiled with `NANOSNAP_NO_STDIO`.
+/// @return true upon success. Return false when error or NanoSNAP is compiled
+/// with `NANOSNAP_NO_STDIO`.
 ///
-bool wav_read(const std::string &filename, uint32_t *rate, std::string *dtype, uint32_t *channels, uint64_t *samples, std::vector<uint8_t> *data, std::string *err);
+bool wav_read(const std::string &filename, uint32_t *rate, std::string *dtype,
+              uint32_t *channels, uint64_t *samples, std::vector<uint8_t> *data,
+              std::string *err);
 
 ///
 /// Write WAV file to a file as PCM format.
@@ -96,10 +101,57 @@ bool wav_read(const std::string &filename, uint32_t *rate, std::string *dtype, u
 /// @param[in] sample Numer of samples to write.
 /// @param[out] err Error or warning message(optional)
 ///
-/// @return true upon success. Return false when error or NanoSNAP is compiled with `NANOSNAP_NO_STDIO`.
+/// @return true upon success. Return false when error or NanoSNAP is compiled
+/// with `NANOSNAP_NO_STDIO`.
 ///
-bool wav_write(const std::string &filename, const uint32_t rate, const std::string &dtype, const uint32_t channels, const uint64_t samples, const uint8_t *data, std::string *err);
+bool wav_write(const std::string &filename, const uint32_t rate,
+               const std::string &dtype, const uint32_t channels,
+               const uint64_t samples, const uint8_t *data, std::string *err);
 
-} // namespace nanosnap
+// ----------------------------------------------
+// From python_speech_features
+// ----------------------------------------------
 
-#endif // NANOSNAP_H_
+///
+/// Convert a value in Hertz to Mel.
+///
+template<typename T>
+inline T hz2mel(const T hz)
+{
+    // TODO(LTE): Use faster log10
+    return static_cast<T>(2595) * std::log10(static_cast<T>(1)+hz/static_cast<T>(700));
+}
+
+///
+/// Convert a value in Mel to Hertz.
+///
+template<typename T>
+inline T mel2hz(const T mel)
+{
+    // TODO(LTE): Use faster pow
+    return static_cast<T>(700)*(std::pow(static_cast<T>(10), (mel/static_cast<T>(2595))-static_cast<T>(1)));
+}
+
+///
+/// Apply a cepstral filter to the matrix of cepstra.
+/// @param[in] cepstra The matrix of mel-cepstra with shape [nframes][ncoeffs]
+/// @param[in] nframes The number of frames(columns) in `cepstra`
+/// @param[in] ncoeffs The number of coefficients(rows) in `cepstra`
+/// @param[out] output Pointer where result will be written. It has same shape of `cepstral` and should have enough memory to store `nframes * ncoeffs` values.
+/// @param[in] L (optional) the liftering coefficient to use. Default is 22. L
+/// <= 0 disables lifter.
+/// @return false when invalid input(e.g. cepstra.size() is not dividable by
+/// `ncoeff`.
+///
+bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeffs,
+            float *output, const int L = 22);
+
+///
+/// Mel Frequency Cepstral Coefficient based on python_speech_features
+///
+/// @return true upon success. Return false when error.
+bool mfcc(float a);
+
+}  // namespace nanosnap
+
+#endif  // NANOSNAP_H_
