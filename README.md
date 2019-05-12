@@ -89,4 +89,5 @@ NanoSNAP is licensed under MIT license.
 * dr_wav : Public domain or MIT-0. By David Reid.
 * fft2d : Very permissive license. See `src/fft2d/readme.txt` for details. Copyright(C) 1996-2001 Takuya OOURA
 * python_speech_features : The MIT License (MIT). Copyright (c) 2013 James Lyons. https://github.com/jameslyons/python_speech_features
+* pocketfft : FFT library used in numpy. Copyright (C) 2004-2018 Max-Planck-Society. 3-clause BSD-tyle license. https://gitlab.mpcdf.mpg.de/mtr/pocketfft
 

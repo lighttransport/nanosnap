@@ -55,6 +55,7 @@ add_library(nanosnap SHARED
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
     ${PROJECT_SOURCE_DIR}/src/speech_features.cc
+    ${PROJECT_SOURCE_DIR}/src/pocketfft.c
 )
 add_sanitizers(nanosnap)
 

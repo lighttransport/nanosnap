@@ -78,6 +78,55 @@ void framesig(const float *sig, const float _frame_len, const float _frame_step)
   (void)iframe_step;
 }
 
+#if 0
+// Input is a 2D array. frames[D][N]
+bool magspec(const size_t N, const size_t D, const double *frames, const size_t NFF, std::vector<double> *output)
+{
+  /*
+    """Compute the magnitude spectrum of each frame in frames. If frames is an NxD matrix, output will be Nx(NFFT/2+1).
+
+    :param frames: the array of frames. Each row is a frame.
+    :param NFFT: the FFT length to use. If NFFT > frame_len, the frames are zero-padded.
+    :returns: If frames is an NxD matrix, output will be Nx(NFFT/2+1). Each row will be the magnitude spectrum of the corresponding frame.
+    """
+    if numpy.shape(frames)[1] > NFFT:
+        logging.warn(
+            'frame length (%d) is greater than FFT size (%d), frame will be truncated. Increase NFFT to avoid.',
+            numpy.shape(frames)[1], NFFT)
+    complex_spec = numpy.fft.rfft(frames, NFFT)
+    return numpy.absolute(complex_spec)
+  */
+
+  if (D > NFFT) {
+    // TODO(LTE): Use zero-adding and continue
+    return false;
+  }
+
+  output->resize(N * (NFFT/2+1));
+
+  // numpy.absolute
+  for (size_t i < 0; i < data_length; i++) {
+    (*output)[i] = std::fabs((*output)[i]);
+  }
+}
+
+
+void powspec(const size_t frame_len, size_t const float *frames, const size_t NFFT) {
+    /*
+    """Compute the power spectrum of each frame in frames. If frames is an NxD matrix, output will be Nx(NFFT/2+1).
+
+    :param frames: the array of frames. Each row is a frame.
+    :param NFFT: the FFT length to use. If NFFT > frame_len, the frames are zero-padded.
+    :returns: If frames is an NxD matrix, output will be Nx(NFFT/2+1). Each row will be the power spectrum of the corresponding frame.
+    """
+    return 1.0 / NFFT * numpy.square(magspec(frames, NFFT))
+    */
+
+}
+#endif
+
+
+
 #define kPI (3.141592f)
 
 }  // namespace
@@ -131,8 +180,12 @@ bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeff,
   return true;
 }
 
-void get_filterbanks(const int nfilt=20, const int nfft=512,samplerate=16000,lowfreq=0,highfreq=None
+//void get_filterbanks(const int nfilt=20, const int nfft=512,samplerate=16000,lowfreq=0,highfreq=None)
+//{
+//
+//}
 
+#if 0
 bool fbank(const size_t n, const float *_signal, const float samplerate, const float winlen, const float winstep, const float nfilt, const float nfft, const float lowfreq, const float _highfreq, const float preemph)
 {
   /*
@@ -179,12 +232,13 @@ bool fbank(const size_t n, const float *_signal, const float samplerate, const f
   StackVector<float, 512> feat;
 
 
-  feat = numpy.dot(pspec,fb.T) # compute the filterbank energies
+  //feat = numpy.dot(pspec,fb.T) # compute the filterbank energies
 
   return true;
 
 
 }
+#endif
 
 #if 0
 bool mfcc(const std::vector<float> &signal, std::vector<float> *output, const float winlen, const size_t nfft,
