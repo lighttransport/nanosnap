@@ -4,13 +4,21 @@ def print_c_array(arr):
 
     if len(arr.shape) == 1:
         for i in arr:
-            c_arr.append(str(float(i)))
+            if isinstance(i, complex):
+                c_arr.append(str(float(i.real)) + 'f')
+                c_arr.append(str(float(i.imag)) + 'f')
+            else:
+                c_arr.append(str(float(i)) + 'f')
 
         c_str = ', '.join(c_arr)
     elif len(arr.shape) == 2:
         for row in arr:
             for i in row:
-                c_arr.append(str(float(i)))
+                if isinstance(i, complex):
+                    c_arr.append(str(float(i.real)) + 'f')
+                    c_arr.append(str(float(i.imag)) + 'f')
+                else:
+                    c_arr.append(str(float(i)) + 'f')
 
         c_str = ', '.join(c_arr)
     else:

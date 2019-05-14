@@ -18,6 +18,7 @@ Simply copy `include` and `src` folder to your platform.
 * [x] macOS
 * [ ] Android
 * [ ] Raspberry Pi
+* [ ] RISC-V
 
 ## Build
 
@@ -49,6 +50,12 @@ $ ./bin/test_nanosnap
 
 ## Features
 
+### FFT
+
+| NanoSNAP               | Description        | Python equivalent                   |
+| ---------------------- | ------------------ | ----------------------------------- |
+| `rfft`                 | Real 1D FFT        | `numpy.fft.rfft`                    |
+
 ### Scipy
 
 | NanoSNAP               | Description        | Python equivalent                   |
@@ -71,6 +78,7 @@ $ ./bin/test_nanosnap
 
 * [ ] Read/write WAV from buffer(memory)
 * [ ] Integrate with NanoNumCp
+* [ ] 2D FFT
 * [ ] Port `python_speech_features`
   * [ ] `python_speech_features.fbank`
   * [ ] `python_speech_features.logfbank`

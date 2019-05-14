@@ -34,6 +34,8 @@ THE SOFTWARE.
 
 #include <cmath>
 
+#include "nanosnap/fft.h"
+
 namespace nanosnap {
 
 ///
@@ -98,7 +100,6 @@ bool wav_read(const std::string &filename, uint32_t *rate, std::string *dtype,
 /// @param[in] channels Audio channels(1 = mono, 2 = stereo)
 /// @param[in] samples The number of audio samples.
 /// @param[in] data WAV data(opaque binary data)
-/// @param[in] sample Numer of samples to write.
 /// @param[out] err Error or warning message(optional)
 ///
 /// @return true upon success. Return false when error or NanoSNAP is compiled

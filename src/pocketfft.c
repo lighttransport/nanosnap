@@ -13,6 +13,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h> // dbg
 
 //#include "npy_config.h"
 //#define restrict NPY_RESTRICT
@@ -2406,3 +2407,73 @@ initpocketfft_internal(void)
     return RETVAL(m);
 }
 #endif
+
+// C API
+int rfft_forward_1d_array(const double *input, const int fft_len, const int nsamples, const int nrows, const float norm_factor, double *output)
+{
+    rfft_plan plan=NULL;
+    int fail = 0;
+
+    if ((fft_len < 1) || (nsamples < 1) || (nrows < 1) || (input == NULL) || (output == NULL)) {
+      // Invalid parameter.
+      return -1;
+    }
+
+    //PyArrayObject *data = (PyArrayObject *)PyArray_FromAny(a1,
+    //        PyArray_DescrFromType(NPY_DOUBLE), 1, 0,
+    //        NPY_ARRAY_DEFAULT | NPY_ARRAY_ENSUREARRAY | NPY_ARRAY_FORCECAST,
+    //        NULL);
+    //if (!data) return NULL;
+
+    int npts = fft_len;
+
+    //npy_intp *tdim=(npy_intp *)malloc(ndim*sizeof(npy_intp));
+    //if (!tdim)
+    //  { Py_XDECREF(data); return NULL; }
+    //for (int d=0; d<ndim-1; ++d)
+    //  tdim[d] = odim[d];
+    //tdim[ndim-1] = npts/2 + 1;
+    //PyArrayObject *ret = (PyArrayObject *)PyArray_Empty(ndim,
+    //        tdim, PyArray_DescrFromType(NPY_CDOUBLE), 0);
+    //free(tdim);
+    //if (!ret) fail=1;
+
+    int num_output_complex_points = npts / 2 + 1;
+
+    int rstep = num_output_complex_points * 2;	// output stride
+
+    int nrepeats = nrows;
+    double *rptr = output;
+    const double *dptr = input;
+
+    plan = make_rfft_plan(npts);
+    if (!plan) fail=1;
+
+    double fct = norm_factor;
+
+    printf("npts = %d, norm = %f\n", npts, norm_factor);
+    printf("rstep = %d\n", rstep);
+    printf("nrepeats = %d\n", nrepeats);
+
+    int nprocessed = 0;
+    if (!fail)
+      for (int i = 0; i < nrepeats; i++) {
+          rptr[rstep-1] = 0.0;
+          memcpy((char *)(rptr+1), dptr, npts*sizeof(double));
+          if (rfft_forward(plan, rptr+1, fct)!=0) {fail=1; break;}
+          rptr[0] = rptr[1];
+          rptr[1] = 0.0;
+          rptr += rstep;
+          //dptr += npts;
+          dptr += nsamples;
+          nprocessed++;
+    }
+    if (plan) destroy_rfft_plan(plan);
+
+    if (fail) {
+      return nprocessed;
+    }
+
+    return nrows;
+
+}

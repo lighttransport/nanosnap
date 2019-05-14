@@ -32,16 +32,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-# Warning options
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Weveryting -Wall")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wundef -Wno-unknown-pragmas")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} /W4")
-endif()
-
-
 # core include
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -55,9 +45,26 @@ add_library(nanosnap SHARED
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
     ${PROJECT_SOURCE_DIR}/src/speech_features.cc
+    ${PROJECT_SOURCE_DIR}/src/fft.cc
     ${PROJECT_SOURCE_DIR}/src/pocketfft.c
 )
 add_sanitizers(nanosnap)
+
+# raise compiler warning level.
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  target_compile_options(nanosnap PRIVATE
+     $<$<COMPILE_LANGUAGE:CXX>: -Weverything -Werror -Wno-c++98-compat -Wno-padded>
+     )
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GCC")
+  target_compile_options(nanosnap PRIVATE
+     $<$<COMPILE_LANGUAGE:CXX>: --pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wundef -Wno-unknown-pragmas>
+     )
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+  target_compile_options(nanosnap PRIVATE
+     $<$<COMPILE_LANGUAGE:CXX>: /W4>
+     )
+endif()
+
 
 if (WIN32)
     set_target_properties(nanosnap PROPERTIES
@@ -72,7 +79,9 @@ if (NANOSNAP_BUILD_TESTS)
         ${PROJECT_SOURCE_DIR}/tests/test_audio.cc
         ${PROJECT_SOURCE_DIR}/tests/test_speech_features.cc
         ${PROJECT_SOURCE_DIR}/tests/test_medfilt1.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_rfft.cc
     )
+    target_include_directories(test_nanosnap PRIVATE ${PROJECT_SOURCE_DIR}/src)
     target_include_directories(test_nanosnap PRIVATE ${PROJECT_SOURCE_DIR}/third_party/doctest)
     target_link_libraries(test_nanosnap nanosnap)
     add_sanitizers(test_nanosnap)

@@ -30,12 +30,27 @@ THE SOFTWARE.
 #include <cmath>
 #include <cstring>
 #include <memory>
+#include <limits>
 
 #include <iostream> // dbg
+
+// pocketfft
+
 
 namespace nanosnap {
 
 namespace {
+
+#if 0
+template<typename T>
+inline T safe_div(const T a, const T b)
+{
+  if (std::fabs(b) < std::numeric_limits<T>::epsilon()) {
+    return static_cast<T>(0.0);
+  } else{
+    return a / b;
+  }
+}
 
 // numpy.linspace in C++
 static void linspace(const float start, const float stop, std::vector<float> *out, const size_t num = 50, const bool end_point = true)
@@ -44,7 +59,7 @@ static void linspace(const float start, const float stop, std::vector<float> *ou
 
   int denom = end_point ? (num - 1) : num;
 
-  float step = (stop - start) / float(denom);
+  float step = safe_div(stop - start, float(denom));
 
   for (size_t i = 0; i < num; i++) {
     (*out)[i] = i * step;
@@ -78,7 +93,6 @@ void framesig(const float *sig, const float _frame_len, const float _frame_step)
   (void)iframe_step;
 }
 
-#if 0
 // Input is a 2D array. frames[D][N]
 bool magspec(const size_t N, const size_t D, const double *frames, const size_t NFF, std::vector<double> *output)
 {

@@ -1,3 +1,3 @@
 rm -rf build
 
-cmake -Bbuild -H. -DSANITIZE_ADDRESS=On
+CXX=clang++ CC=clang cmake -Bbuild -H. -DSANITIZE_ADDRESS=On
