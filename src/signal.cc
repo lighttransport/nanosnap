@@ -6,10 +6,11 @@
 
 namespace nanosnap {
 
+namespace {
+
 // Find median value.
 // `a` will be modified.
 static inline float find_median(const size_t n, float *a) {
-
   // Sort `a`.
   // Simple O(n^2) selection sort.
   //
@@ -40,6 +41,8 @@ static inline float find_median(const size_t n, float *a) {
   // We know the window size is odd, thus a[n / 2] is the median value.
   return a[(n >> 1)];
 }
+
+}  // namespace
 
 bool medfilt1(const size_t n, const float *x, const int k, float *y,
               bool include_nan, bool padding) {
@@ -88,6 +91,54 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
 void medfilt(float x, float *y) {
   // TODO(LTE): Implement.
   (*y) = x;
+}
+
+bool convolve(const float *_a, const size_t _n, const float *_v,
+              const size_t _m, std::vector<float> *output, const int mode) {
+  size_t m = _m, n = _n;
+  const float *a = _a;
+  const float *v = _v;
+
+  if (_m > _n) {
+    // swap
+    a = _v;
+    n = _m;
+
+    v = _a;
+    m = _n;
+  }
+
+  if ((n == 0) || (m == 0)) {
+    return false;
+  }
+
+  (void)output;
+  (void)mode;
+  return false;
+
+#if 0
+  size_t out_size = size_t(n); // FIXME
+
+  output->resize(out_size);
+
+  //
+  // ret[n] = sum_{m=-inf}^{m=inf] a[m] * v[n - m]
+  //
+  // note that `v` is accessed in reversed manner(in numpy)
+  //
+
+  for (int i = 0; i < out_size; i++) {
+    float sum = 0.0f;
+    for (int f = f_start; f <= f_end; f++) {
+      int a_idx = a_offset + i + f;
+      int v_idx = v_offset + i + f;
+
+      sum += a[a_idx] * v[v_idx];
+    }
+
+    (*output)[i] = sum;
+  }
+#endif
 }
 
 }  // namespace nanosnap

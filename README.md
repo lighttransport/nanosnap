@@ -48,7 +48,44 @@ $ ./bin/test_nanosnap
 
 * `-DSANITIZE_ADDRESS=On` : Enable ASan.
 
+## Data layout of array
+
+NanoSNAP process 2D and higher ND array data as 1D flattened array.
+
+The ordering of array data follows C language(This is same behavior in `numpy` array in C mode). For example, `img[H][W]` has `W` pixels in width(colums) , `H` pixels in height(rows).
+
+```
+-> memory address increases
+
++-----------+-----------+     +-------------+-----------+     +---------------+
+| img[0][0] | img[0][1] | ... | img[0][W-1] | img[1][0] | ... | img[H-1][W-1] |
++-----------+-----------+     +-------------+-----------+     +---------------+
+```
+
+In contrary to `numpy` or vision/ML community, The notation of dimensional arguments for a function signature starts from inner most dimension(right-most array dim). This is rather common notation in C language and graphics community. i.e,
+
+```
+// `output` has the shape of [h][w]
+void create_image(size_t w, size_t h, float *output) {
+}
+
+// `output` has the shape of [d][h][w]
+void create_3d_tensor(size_t w, size_t h, size_t d, float *output) {
+}
+
+// `input` has the shape of [nrows][nframes].
+void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
+}
+```
+
 ## Features
+
+### Random number generation
+
+| NanoSNAP               | Description            | Python equivalent                  |
+| ---------------------- | ---------------------- | ---------------------------------- |
+| `random_uniform`       | Uniform random number  | `numpy.random.rand`                |
+
 
 ### FFT
 
@@ -76,9 +113,13 @@ $ ./bin/test_nanosnap
 
 ## TODO
 
+* [ ] Multithreading with C++11 `thread`.
+  * [ ] Use `StackVector` as much as possible.
 * [ ] Read/write WAV from buffer(memory)
-* [ ] Integrate with NanoNumCp
-* [ ] 2D FFT
+* [ ] Integrate with `NanoNumCp`
+* FFT
+  * [ ] Implement more FFT functions defined in `scipy.fft`.
+  * [ ] 2D FFT
 * [ ] Port `python_speech_features`
   * [ ] `python_speech_features.fbank`
   * [ ] `python_speech_features.logfbank`
