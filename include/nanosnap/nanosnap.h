@@ -84,20 +84,21 @@ bool convolve(const float *a, const size_t n, const float *v,
 
 ///
 /// Generate sequence of uniformly random values of `n` elements.
-/// Values are in range [0.0, 1.0).
+/// Equivalent to `numpy.random.uniform`.
 ///
-/// This function actually generates deterministic values without specifying
-/// `seed` value(which is default to 0)
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.uniform.htm
 ///
-/// We use MersenneTwister algorithm to generate random number.
+/// This function actually generates deterministic values based on `seed` value.
 ///
-/// App user must specify `seed` value to get different distribution.
+/// Underling algorithm to generate random numbers is MersenneTwister(std::mt19937).
 ///
+/// @param[in] lowval Lower boundary of the output interval.
+/// @param[in] highval Upper boundary of the output interval.
 /// @param[in] n The number of RNG elements to generate.
 /// @param[in] seed Seed value for RNG generator.
 /// @return Generated random number values.
 ///
-std::vector<float> random_uniform(size_t n, size_t seed = 0);
+std::vector<float> random_uniform(const float lowval, const float highval, const size_t n, const size_t seed);
 
 ///
 /// @brief Read WAV file from a file.

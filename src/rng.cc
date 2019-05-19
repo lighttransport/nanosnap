@@ -6,13 +6,13 @@
 
 namespace nanosnap {
 
-std::vector<float> random_uniform(size_t n, size_t seed)
+std::vector<float> random_uniform(const float lowval, const float maxval, const size_t n, const size_t seed)
 {
   // We only allow deterministic random number generation.
   // App user must care abount how to handle seed value.
   std::mt19937 rand(seed);
 
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  std::uniform_real_distribution<float> dist(lowval, maxval);
 
   std::vector<float> r;
   r.resize(n);

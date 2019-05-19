@@ -127,6 +127,14 @@ void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
   * [ ] `python_speech_features.ssc`
 * [ ] Write our own FFT routine.
 
+## Developer note
+
+### Adding tests
+
+* Write testvector generator and put it to `tests/gen/`
+  * Generate testvector file(`.inc`)
+* Add .cc to `tests`. Add it to CMakeLists.txt.
+
 ## License
 
 NanoSNAP is licensed under MIT license.

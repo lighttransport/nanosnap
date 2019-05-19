@@ -17,23 +17,26 @@ TEST_CASE("rfft") {
 
   CHECK(ret == true);
 
-  std::cout << "result = \n";
-  for (size_t j = 0; j < k_nrows; j++) {
-    for (size_t i = 0; i < out_npoints; i++) {
-      std::cout << "[" << j << "][" << i
-                << "] = " << result[j * out_npoints + i].real() << ", "
-                << result[j * out_npoints + i].imag() << "\n";
-    }
-  }
+  //std::cout << "result = \n";
+  //for (size_t j = 0; j < k_nrows; j++) {
+  //  for (size_t i = 0; i < out_npoints; i++) {
+  //    std::cout << "[" << j << "][" << i
+  //              << "] = " << result[j * out_npoints + i].real() << ", "
+  //              << result[j * out_npoints + i].imag() << "\n";
+  //  }
+  //}
 
-  std::cout << "\nreference = \n";
-  for (size_t j = 0; j < k_nrows; j++) {
-    for (size_t i = 0; i < out_npoints; i++) {
-      std::cout << "[" << j << "][" << i
-                << "] = " << g_reference[2 * (j * out_npoints + i) + 0] << ", "
-                << g_reference[2 * (j * out_npoints + i) + 1] << "\n";
-    }
-  }
+  //std::cout << "\nreference = \n";
+  //for (size_t j = 0; j < k_nrows; j++) {
+  //  for (size_t i = 0; i < out_npoints; i++) {
+  //    std::cout << "[" << j << "][" << i
+  //              << "] = " << g_reference[2 * (j * out_npoints + i) + 0] << ", "
+  //              << g_reference[2 * (j * out_npoints + i) + 1] << "\n";
+  //  }
+  //}
+
+  std::cout << "len = " << sizeof(g_reference) / sizeof(g_reference[0]) << std::endl;
+  std::cout << "n = " << k_nrows * out_npoints << std::endl;
 
   for (size_t i = 0; i < k_nrows * out_npoints; i++) {
     CHECK(g_reference[2 * i + 0] == Approx(result[i].real()));
