@@ -80,6 +80,12 @@ void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
 
 ## Features
 
+### Numpy
+
+| NanoSNAP               | Description            | Python equivalent                  |
+| ---------------------- | ---------------------- | ---------------------------------- |
+| `convolve`             | Convolution(1D only)   | `numpy.convolve`                   |
+
 ### Random number generation
 
 | NanoSNAP               | Description            | Python equivalent                  |

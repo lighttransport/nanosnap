@@ -105,6 +105,24 @@ bool convolve(const float *a, const size_t n, const float *v,
 std::vector<float> random_uniform(const float lowval, const float highval, const size_t n, const size_t seed);
 
 ///
+/// Shuffle array elements in random.
+/// Equivalent to `numpy.random.shuffle`.
+///
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.shuffle.htm
+///
+/// In contrast to `numpy.random.shuffle`, this function does not shuffle an array in-place.
+///
+/// This function actually does deterministic shuffle(use deterministic RNGs) based on `seed` value.
+///
+/// Underling algorithm to generate random numbers is MersenneTwister(std::mt19937).
+///
+/// @param[in] x Input array.
+/// @param[in] seed Seed value for RNG generator.
+/// @return Shuffled array.
+///
+std::vector<float> random_shuffle(const float *x, const size_t n, const size_t seed);
+
+///
 /// @brief Read WAV file from a file.
 ///
 /// API refers to `scipy.io.wavfile.read`
