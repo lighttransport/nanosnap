@@ -3,6 +3,7 @@
 #include "stack_vector.h"
 
 #include <cmath>
+//#include <iostream> // dbg
 
 namespace nanosnap {
 
@@ -112,33 +113,164 @@ bool convolve(const float *_a, const size_t _n, const float *_v,
     return false;
   }
 
-  (void)output;
-  (void)mode;
-  return false;
+  if (mode == 0) {
+    // mode 'full'
+    //
+    // len(a) = 5
+    // len(v) = 3
+    // output = 5 + 3 - 1 = 7
+    //
+    //                 +----+----+----+----+----+
+    //                 | a0 | a1 | a2 | a3 | a4 |
+    //                 +----+----+----+----+----+
+    //
+    //             ....+----+
+    //  n0     v2 | v1 | v0 |
+    //             ....+----+
+    //
+    //             ....+----+----+
+    //  n1         v2  | v1 | v0 |
+    //             ....+----+----+
+    //
+    //                 +----+----+----+
+    //  n2             | v2 | v1 | v0 |
+    //                 +----+----+----+
+    //
+    //                                     +----+....
+    //  n6                                 | v2 | v1 | v0
+    //                                     +----+....
+    //
 
-#if 0
-  size_t out_size = size_t(n); // FIXME
+    size_t out_length = n + m + 1;
+    output->resize(out_length);
 
-  output->resize(out_size);
+    // TODO(LTE): optimize loop
+    for (int n_idx = 0; n_idx < int(out_length); n_idx++) {
+      float sum = 0.0f;
+      for (int m_idx = -(int(m) - 1); m_idx <= 0; m_idx++) {
+        int a_idx = n_idx + m_idx;
+        int v_idx = -m_idx;
+        // std::cout << "n = " << n_idx << ", m = " << m_idx << "a = " << a_idx
+        // << ", v = " << v_idx << "\n";
+        if ((a_idx < 0) || (a_idx >= int(n))) {
+          continue;
+        }
+        if ((v_idx < 0) || (v_idx >= int(m))) {
+          continue;
+        }
+        // std::cout << "got it\n";
+        sum += a[size_t(a_idx)] * v[size_t(v_idx)];
+      }
+      // std::cout << "sum[" << n_idx << "] = " << sum << std::endl;
+      (*output)[size_t(n_idx)] = sum;
+    }
+  } else if (mode == 1) {
+    // mode 'same'
+    //
+    // len(a) = 5
+    // len(v) = 3
+    // output = 5 (max(M, N))
+    //
+    //                 +----+----+----+----+----+
+    //                 | a0 | a1 | a2 | a3 | a4 |
+    //                 +----+----+----+----+----+
+    //
+    //             ....+----+----+
+    //  n0         v2  | v1 | v0 |
+    //             ....+----+----+
+    //
+    //                 +----+----+----+
+    //  n2             | v2 | v1 | v0 |
+    //                 +----+----+----+
+    //
+    //                                +----+----+....
+    //  n4                            | v2 | v1 | v0
+    //                                +----+----+....
+    //
 
-  //
-  // ret[n] = sum_{m=-inf}^{m=inf] a[m] * v[n - m]
-  //
-  // note that `v` is accessed in reversed manner(in numpy)
-  //
+    size_t out_length = n;
+    output->resize(out_length);
 
-  for (int i = 0; i < out_size; i++) {
-    float sum = 0.0f;
-    for (int f = f_start; f <= f_end; f++) {
-      int a_idx = a_offset + i + f;
-      int v_idx = v_offset + i + f;
+    // TODO(LTE): Verify this offset calculation is correct.
+    int a_offset = int(m) / 2;
 
-      sum += a[a_idx] * v[v_idx];
+    // TODO(LTE): optimize loop
+    for (int n_idx = 0; n_idx < int(out_length); n_idx++) {
+      float sum = 0.0f;
+      for (int m_idx = -(int(m) - 1); m_idx <= 0; m_idx++) {
+        int a_idx = n_idx + m_idx + a_offset;
+        int v_idx = -m_idx;
+        // std::cout << "n = " << n_idx << ", m = " << m_idx << "a = " << a_idx
+        // << ", v = " << v_idx << "\n";
+        if ((a_idx < 0) || (a_idx >= int(n))) {
+          continue;
+        }
+        if ((v_idx < 0) || (v_idx >= int(m))) {
+          continue;
+        }
+        // std::cout << "got it\n";
+        sum += a[size_t(a_idx)] * v[size_t(v_idx)];
+      }
+      // std::cout << "sum[" << n_idx << "] = " << sum << std::endl;
+      (*output)[size_t(n_idx)] = sum;
     }
 
-    (*output)[i] = sum;
+  } else if (mode == 2) {
+    // mode 'valid'
+    //
+    // len(a) = 5
+    // len(v) = 3
+    // output = 5 - 3 + 1
+    //
+    //                 +----+----+----+----+----+
+    //                 | a0 | a1 | a2 | a3 | a4 |
+    //                 +----+----+----+----+----+
+    //
+    //                 +----+----+----+
+    //  n0             | v2 | v1 | v0 |
+    //                 +----+----+----+
+    //
+    //                      +----+----+----+
+    //  n1                  | v2 | v1 | v0 |
+    //                      +----+----+----+
+    //
+    //                           +----+----+----+
+    //  n2                       | v2 | v1 | v0 |
+    //                           +----+----+----+
+    //
+    //
+
+    size_t out_length = n - m + 1;
+    output->resize(out_length);
+
+    int a_offset = int(m) - 1;
+
+    // TODO(LTE): optimize loop
+    for (int n_idx = 0; n_idx < int(out_length); n_idx++) {
+      float sum = 0.0f;
+      for (int m_idx = -(int(m) - 1); m_idx <= 0; m_idx++) {
+        int a_idx = n_idx + m_idx + a_offset;
+        int v_idx = -m_idx;
+        // std::cout << "n = " << n_idx << ", m = " << m_idx << "a = " << a_idx
+        // << ", v = " << v_idx << "\n";
+        if ((a_idx < 0) || (a_idx >= int(n))) {
+          continue;
+        }
+        if ((v_idx < 0) || (v_idx >= int(m))) {
+          continue;
+        }
+        // std::cout << "got it\n";
+        sum += a[size_t(a_idx)] * v[size_t(v_idx)];
+      }
+      // std::cout << "sum[" << n_idx << "] = " << sum << std::endl;
+      (*output)[size_t(n_idx)] = sum;
+    }
+
+  } else {
+    return false;
   }
-#endif
+
+  return true;
 }
 
 }  // namespace nanosnap

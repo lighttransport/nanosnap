@@ -71,9 +71,13 @@ void medfilt(float x, float *y);
 ///
 /// https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
 ///
+/// If `v` is longer than `a`, the arrays are swapped before computation.
+///
+/// Note that `v` is accessed in reverse manner as described in numpy's document.
+///
 /// @param[in] a First 1D input([n])
 /// @param[in] v Second 1D input([m])
-/// @param[in] mode full(0), same(1) or valid(2)
+/// @param[in] mode full(0), same(1) or valid(2) (See numpy document for details)
 /// @param[out] output Discrete, linear convolution of `a` and `v`.
 ///
 /// @return Discrete, linear convolution of `a` and `v`
