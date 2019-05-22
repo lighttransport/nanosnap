@@ -29,9 +29,9 @@ THE SOFTWARE.
 #define NANOSNAP_H_
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
 
 #include <cmath>
 
@@ -61,30 +61,25 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
               bool include_nan = false, bool padding = true);
 
 ///
-/// @brief Median filter
-///
-void medfilt(float x, float *y);
-
-
-///
-/// @brief Returns the discrete, linear convolution of two one-dimensional sequences.
+/// @brief Returns the discrete, linear convolution of two 1D sequences.
 ///
 /// https://docs.scipy.org/doc/numpy/reference/generated/numpy.convolve.html
 ///
 /// If `v` is longer than `a`, the arrays are swapped before computation.
 ///
-/// Note that `v` is accessed in reverse manner as described in numpy's document.
+/// Note that `v` is accessed in reverse manner as described in numpy's
+/// document.
 ///
 /// @param[in] a First 1D input([n])
 /// @param[in] v Second 1D input([m])
-/// @param[in] mode full(0), same(1) or valid(2) (See numpy document for details)
+/// @param[in] mode full(0), same(1) or valid(2) (See numpy document for
+/// details)
 /// @param[out] output Discrete, linear convolution of `a` and `v`.
 ///
 /// @return Discrete, linear convolution of `a` and `v`
 ///
-bool convolve(const float *a, const size_t n, const float *v,
-              const size_t m, std::vector<float> *output, const int mode);
-
+bool convolve(const float *a, const size_t n, const float *v, const size_t m,
+              std::vector<float> *output, const int mode);
 
 ///
 /// Generate sequence of uniformly random values of `n` elements.
@@ -94,7 +89,8 @@ bool convolve(const float *a, const size_t n, const float *v,
 ///
 /// This function actually generates deterministic values based on `seed` value.
 ///
-/// Underling algorithm to generate random numbers is MersenneTwister(std::mt19937).
+/// Underling algorithm to generate random numbers is
+/// MersenneTwister(std::mt19937).
 ///
 /// @param[in] lowval Lower boundary of the output interval.
 /// @param[in] highval Upper boundary of the output interval.
@@ -102,7 +98,28 @@ bool convolve(const float *a, const size_t n, const float *v,
 /// @param[in] seed Seed value for RNG generator.
 /// @return Generated random number values.
 ///
-std::vector<float> random_uniform(const float lowval, const float highval, const size_t n, const size_t seed);
+std::vector<float> random_uniform(const float lowval, const float highval,
+                                  const size_t n, const size_t seed);
+
+///
+/// Draw random samples from a normal (Gaussian) distribution.
+/// Equivalent to `numpy.random.normal`.
+///
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.normal.htm
+///
+/// This function actually generates deterministic values based on `seed` value.
+///
+/// Underling algorithm to generate random numbers is
+/// MersenneTwister(std::mt19937).
+///
+/// @param[in] mean Mean of the distribution. Default 0.0
+/// @param[in] stddev Standard deviation of the distribution. Default 1.0
+/// @param[in] n The number of RNG elements to generate.
+/// @param[in] seed Seed value for RNG generator.
+/// @return Drawn random samples.
+///
+std::vector<float> random_normal(const float mean, const float stddev,
+                                 const size_t n, const size_t seed);
 
 ///
 /// Shuffle array elements in random.
@@ -110,17 +127,38 @@ std::vector<float> random_uniform(const float lowval, const float highval, const
 ///
 /// https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.shuffle.htm
 ///
-/// In contrast to `numpy.random.shuffle`, this function does not shuffle an array in-place.
+/// In contrast to `numpy.random.shuffle`, this function does not shuffle an
+/// array in-place.
 ///
-/// This function actually does deterministic shuffle(use deterministic RNGs) based on `seed` value.
+/// This function actually does deterministic shuffle(use deterministic RNGs)
+/// based on `seed` value.
 ///
-/// Underling algorithm to generate random numbers is MersenneTwister(std::mt19937).
+/// Underling algorithm to generate random numbers is
+/// MersenneTwister(std::mt19937).
 ///
 /// @param[in] x Input array.
 /// @param[in] seed Seed value for RNG generator.
 /// @return Shuffled array.
 ///
-std::vector<float> random_shuffle(const float *x, const size_t n, const size_t seed);
+std::vector<float> random_shuffle(const float *x, const size_t n,
+                                  const size_t seed);
+
+///
+/// Shuffle array elements randomly in-place.
+/// Equivalent to `numpy.random.shuffle`.
+///
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.shuffle.htm
+///
+/// This function actually does deterministic shuffle(use deterministic RNGs)
+/// based on `seed` value.
+///
+/// Underling algorithm to generate random numbers is
+/// MersenneTwister(std::mt19937).
+///
+/// @param[in,out] x Input/output array.
+/// @param[in] seed Seed value for RNG generator.
+///
+void random_shuffle(float *x, const size_t n, const size_t seed);
 
 ///
 /// @brief Read WAV file from a file.
@@ -178,33 +216,30 @@ bool wav_write(const std::string &filename, const uint32_t rate,
 ///
 /// @brief Convert a value in Hertz to Mel.
 ///
-template<typename T>
-inline T hz2mel(const T hz)
-{
-    // TODO(LTE): Use faster log10
-    return static_cast<T>(2595) * std::log10(static_cast<T>(1)+hz/static_cast<T>(700));
+template <typename T>
+inline T hz2mel(const T hz) {
+  // TODO(LTE): Use faster log10
+  return static_cast<T>(2595) *
+         std::log10(static_cast<T>(1) + hz / static_cast<T>(700));
 }
 
 ///
 /// @brief Convert a value in Mel to Hertz.
 ///
-template<typename T>
-inline T mel2hz(const T mel)
-{
-    // TODO(LTE): Use faster pow
-    return static_cast<T>(700)*(std::pow(static_cast<T>(10), (mel/static_cast<T>(2595))-static_cast<T>(1)));
+template <typename T>
+inline T mel2hz(const T mel) {
+  // TODO(LTE): Use faster pow
+  return static_cast<T>(700) *
+         (std::pow(static_cast<T>(10),
+                   (mel / static_cast<T>(2595)) - static_cast<T>(1)));
 }
 
 ///
 /// @brief Default windowing function.
 ///
-/// Construct an array of length `n` with all 1's.
-///
-inline std::vector<float> fIdentityWindowingFunction(size_t n)
-{
-  // numpy.ones((n, ))
-  std::vector<float> fn(n, 1.0f);
-  return fn;
+inline float fIdentityWindowingFunction(size_t n) {
+  (void)n;
+  return 1.0f;
 }
 
 ///
@@ -213,20 +248,48 @@ inline std::vector<float> fIdentityWindowingFunction(size_t n)
 /// @param[in] cepstra The matrix of mel-cepstra with shape [nframes][ncoeffs]
 /// @param[in] nframes The number of frames(columns) in `cepstra`
 /// @param[in] ncoeffs The number of coefficients(rows) in `cepstra`
-/// @param[out] output Pointer where result will be written. It has same shape of `cepstral` and should have enough memory to store `nframes * ncoeffs` values.
+/// values.
+/// @param[out] output Liftered output
 /// @param[in] L (optional) the liftering coefficient to use. Default is 22. L
 /// <= 0 disables lifter.
 /// @return false when invalid input(e.g. cepstra.size() is not dividable by
 /// `ncoeff`.
 ///
 bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeffs,
-            float *output, const int L = 22);
+            std::vector<float> *output, const int L = 22);
 
 ///
 /// Mel Frequency Cepstral Coefficient based on python_speech_features
 ///
+/// @param[in] signal Input signal(1D).
+/// @param[in] sig_len The length(samples) of signal.
+/// @param[in] samplerate Sampling rate [Hz] Default 16000(16k Hz)
+/// @param[in] winlen the length of the analysis window in seconds. default
+/// 0.025 (25 [ms])
+/// @param[in] winstep the step between successive windows in seconds. default
+/// 0.01 (10 [ms])
+/// @param[in] ncep The number of cepstrum to return. default 13.
+/// @param[in] nfilt The number of filter banks. default 26.
+/// @param[in] nfft The FFT size. Default 512.
+/// @param[in] low_freq lowest band edge of mel filters. [Hz]. default 0.0.
+/// @param[in] high_freq highest band edge of mel filters. [Hz]. Default
+/// `samplerate/2`.
+/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0
+/// is no filter. default 0.97.
+/// @param[in] cep_lifter apply a lifter to final cepstral coefficients. 0 is no lifter. Default is 22.
+/// @param[in] append_energy if this is true, the zeroth cepstral coefficient is replaced with the log of the total frame energy.
+/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if
+/// you don't need this feature.
+/// @param[out] mfcc MFCC features.
+///
 /// @return true upon success. Return false when error.
-bool mfcc(float a);
+bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
+          const float winlen, const float winstep, const size_t ncep,
+          const size_t nfilt, const size_t nfft, const float low_freq,
+          const float high_freq, const float preemph, const size_t cep_lifter,
+          const bool append_energy,
+          const std::function<float(int)> winfunc,
+          std::vector<float> *mfcc);
 
 ///
 /// \brief  Compute Mel-filterbank energy features from an audio signal.
@@ -236,20 +299,30 @@ bool mfcc(float a);
 /// @param[in] signal Input signal(1D).
 /// @param[in] nframes The number of frames(samples) in input `signal`.
 /// @param[in] samplerate Sampling rate [Hz] Default 16000(16k Hz)
-/// @param[in] winlen the length of the analysis window in seconds. default 0.025 (25 [ms])
-/// @param[in] winstep the step between successive windows in seconds. default 0.01 (10 [ms])
-/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if you don't need this feature.
+/// @param[in] winlen the length of the analysis window in seconds. default
+/// 0.025 (25 [ms])
+/// @param[in] winstep the step between successive windows in seconds. default
+/// 0.01 (10 [ms])
+/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if
+/// you don't need this feature.
 /// @param[in] nfilt The number of filter banks. default 26.
 /// @param[in] nfft The FFT size. Default 512.
 /// @param[in] lowfreq lowest band edge of mel filters. [Hz]. default 0.0.
-/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default `samplerate/2`.
-/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0 is no filter. default 0.97.
+/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default
+/// `samplerate/2`.
+/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0
+/// is no filter. default 0.97.
+/// @param[out] features Output features.
+/// @param[out] energies Optional. Output energies(can be nullptr).
 ///
-bool fbank(const float *signal, const size_t nframes, const float samplerate,
+/// @return The number of frames(positive value). Negative value means there was an error.
+///
+ssize_t fbank(const float *signal, const size_t nframes, const float samplerate,
            const float winlen, const float winstep,
-           const std::function<std::vector<float>(int)> winfunc,
+           const std::function<float(int)> winfunc,
            const int nfilt, const int nfft, const float lowfreq,
-           const float highfreq, const float preemph);
+           const float highfreq, const float preemph,
+           std::vector<float> *features, std::vector<float> *energies);
 
 ///
 /// \brief  Compute log Mel-filterbank energy features from an audio signal.
@@ -259,57 +332,77 @@ bool fbank(const float *signal, const size_t nframes, const float samplerate,
 /// @param[in] signal Input signal(1D).
 /// @param[in] nframes The number of frames(samples) in input `signal`.
 /// @param[in] samplerate Sampling rate [Hz] Default 16000(16k Hz)
-/// @param[in] winlen the length of the analysis window in seconds. default 0.025 (25 [ms])
-/// @param[in] winstep the step between successive windows in seconds. default 0.01 (10 [ms])
-/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if you don't need this feature.
+/// @param[in] winlen the length of the analysis window in seconds. default
+/// 0.025 (25 [ms])
+/// @param[in] winstep the step between successive windows in seconds. default
+/// 0.01 (10 [ms])
+/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if
+/// you don't need this feature.
 /// @param[in] nfilt The number of filter banks. default 26.
 /// @param[in] nfft The FFT size. Default 512.
 /// @param[in] lowfreq lowest band edge of mel filters. [Hz]. default 0.0.
-/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default `samplerate/2`.
-/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0 is no filter. default 0.97.
+/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default
+/// `samplerate/2`.
+/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0
+/// is no filter. default 0.97.
+/// @param[out] features Output features.
+/// @param[out] energies Optional. Output energies(can be nullptr).
 ///
-bool logfbank(const float *signal, const size_t nframes, const float samplerate,
-           const float winlen, const float winstep,
-           const std::function<std::vector<float>(int)> winfunc,
-           const int nfilt, const int nfft, const float lowfreq,
-           const float highfreq, const float preemph);
+/// @return The number of frames(positive value). Negative value means there was an error.
+///
+ssize_t logfbank(const float *signal, const size_t nframes, const float samplerate,
+              const float winlen, const float winstep,
+              const std::function<float(int)> winfunc,
+              const int nfilt, const int nfft, const float lowfreq,
+              const float highfreq, const float preemph,
+              std::vector<float> *features, std::vector<float> *energies);
 
 ///
 /// @brief Compute Spectral Subband Centroid features from an audio signal.
 ///
 /// @param[in] signal Input signal(1D).
-/// @param[in] nframes The number of frames(samples) in input `signal`.
+/// @param[in] sig_len The length(samples) of input `signal`.
 /// @param[in] samplerate Sampling rate [Hz] Default 16000(16k Hz)
-/// @param[in] winlen the length of the analysis window in seconds. default 0.025 (25 [ms])
-/// @param[in] winstep the step between successive windows in seconds. default 0.01 (10 [ms])
-/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if you don't need this feature.
+/// @param[in] winlen the length of the analysis window in seconds. default
+/// 0.025 (25 [ms])
+/// @param[in] winstep the step between successive windows in seconds. default
+/// 0.01 (10 [ms])
 /// @param[in] nfilt The number of filter banks. default 26.
 /// @param[in] nfft The FFT size. Default 512.
 /// @param[in] lowfreq lowest band edge of mel filters. [Hz]. default 0.0.
-/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default `samplerate/2`.
-/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0 is no filter. default 0.97.
+/// @param[in] highfreq highest band edge of mel filters. [Hz]. Default
+/// `samplerate/2`.
+/// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0
+/// is no filter. default 0.97.
+/// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if
+/// you don't need this feature.
+/// @param[out] features Output SSC. The length = nframes(return value) * nfilt.
 ///
-/// @return true upon success.
+/// @return The number of frames(positive). Negative value when there was an error.
 ///
-bool ssc(const float *signal, const size_t nframes, const float samplerate,
-           const float winlen, const float winstep,
-           const std::function<std::vector<float>(int)> winfunc,
-           const int nfilt, const int nfft, const float lowfreq,
-           const float highfreq, const float preemph);
+ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
+         const float winlen, const float winstep,
+         const int nfilt,
+         const int nfft, const int lowfreq, const int highfreq,
+         const float preemph,
+        std::function<float(int)> winfunc,
+        std::vector<float> *features);
 
 
 ///
-/// @brief Calculates the FFT size as a power of two greater than or equal to the number of samples in a single window length.
+/// @brief Calculates the FFT size as a power of two greater than or equal to
+/// the number of samples in a single window length.
 ///
 ///    Having an FFT less than the window length loses precision by dropping
 ///    many of the samples; a longer FFT than the window allows zero-padding
-///    of the FFT buffer which is neutral in terms of frequency domain conversion.
+///    of the FFT buffer which is neutral in terms of frequency domain
+///    conversion.
 ///
-/// @param[in] samplerate The sample rate of the signal we are working with, in Hz.
+/// @param[in] samplerate The sample rate of the signal we are working with, in
+/// Hz.
 /// @param[in] winlen The length of the analysis window in seconds.
 ///
-inline int calculate_nfft(const float samplerate, const float winlen)
-{
+inline int calculate_nfft(const float samplerate, const float winlen) {
   const float window_length_samples = winlen * samplerate;
 
   int nfft = 1;
@@ -320,7 +413,6 @@ inline int calculate_nfft(const float samplerate, const float winlen)
 
   return nfft;
 }
-
 
 }  // namespace nanosnap
 

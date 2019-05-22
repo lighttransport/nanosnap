@@ -11,9 +11,13 @@ TEST_CASE("rfft") {
 #include "testvector/rfft.inc"
 
   size_t out_npoints = (k_fft_len / 2) + 1;
-  std::vector<std::complex<float>> result(out_npoints * k_nrows);
+  std::vector<std::complex<float>> result;
+  std::cout << "input len = " << sizeof(g_input) / sizeof(g_input[0]) << "\n";
+  std::cout << "nframes = " << k_nframes << "\n";
+  std::cout << "nrows = " << k_nrows << "\n";
+
   bool ret =
-      nanosnap::rfft(g_input, k_fft_len, k_nframes, k_nrows, result.data());
+      nanosnap::rfft(g_input, k_nframes, k_nrows, k_fft_len, &result);
 
   CHECK(ret == true);
 

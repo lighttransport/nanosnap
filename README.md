@@ -44,6 +44,35 @@ $ ./bin/test_nanosnap
 * `NANOSNAP_NO_STDIO` Disable IO. e.g. `wav_read` is not available. This feature is useful when you want to use NanoSNAP in Android or embedded devices.
 
 
+## API design
+
+NanoSNAP takes raw pointer for input array values followin its length information(or shape information).
+
+```c++
+bool proc(const float *input, int n);
+```
+
+Output array is usually `std::vector` type so that NanoSNAP can allocate buffer for output internally.
+Output array is a functiona argument when a function needs to return the status.
+
+```c++
+bool proc(int n, std::vector<float> *output);
+```
+
+Otherwise, output array is a return value.
+
+```c++
+std::vector<float> proc(int n);
+```
+
+### Internal state.
+
+All API does not contain its internal state.
+
+### Multithreading
+
+NanoSNAP API does not ensure MT-safe.
+
 ### CMake option for developers
 
 * `-DSANITIZE_ADDRESS=On` : Enable ASan.
@@ -62,20 +91,17 @@ The ordering of array data follows C language(This is same behavior in `numpy` a
 +-----------+-----------+     +-------------+-----------+     +---------------+
 ```
 
-In contrary to `numpy` or vision/ML community, The notation of dimensional arguments for a function signature starts from inner most dimension(right-most array dim). This is rather common notation in C language and graphics community. i.e,
+In contrary to `numpy` or vision/ML library such like OpenCV, The notation of dimensional arguments for a function signature starts from inner most dimension(right-most array dim). This is rather common notation in C language and graphics community. i.e,
 
 ```
 // `output` has the shape of [h][w]
-void create_image(size_t w, size_t h, float *output) {
-}
+void create_image(size_t w, size_t h, float *output);
 
 // `output` has the shape of [d][h][w]
-void create_3d_tensor(size_t w, size_t h, size_t d, float *output) {
-}
+void create_3d_tensor(size_t w, size_t h, size_t d, float *output);
 
 // `input` has the shape of [nrows][nframes].
-void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
-}
+void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 ```
 
 ## Features
@@ -84,13 +110,14 @@ void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
 
 | NanoSNAP               | Description            | Python equivalent                  |
 | ---------------------- | ---------------------- | ---------------------------------- |
-| `convolve`             | Convolution(1D only)   | `numpy.convolve`                   |
+| `convolve`             | 1D convolution         | `numpy.convolve`                   |
 
 ### Random number generation
 
 | NanoSNAP               | Description            | Python equivalent                  |
 | ---------------------- | ---------------------- | ---------------------------------- |
 | `random_uniform`       | Uniform random number  | `numpy.random.rand`                |
+| `random_shuffle`       | Randomly shuffle array | `numpy.random.shuffle`             |
 
 
 ### FFT
@@ -109,12 +136,15 @@ void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
 
 ### Python speech features
 
-| NanoSNAP               | Description        | Python equivalent                   |
-| ---------------------- | ------------------ | ----------------------------------- |
-| `mel2hz`               | Mel to Hz          | `mel2hz`                            |
-| `hz2mel`               | Hz to Mel          | `hz2mel`                            |
-| `lifter`               |                    | `lifter`                            |
-| `fbank`                |                    | `fbank`                             |
+| NanoSNAP               | Description                                       | Python equivalent                   |
+| ---------------------- | ------------------------------------------------- | ----------------------------------- |
+| `mel2hz`               | Mel to Hz                                         | `mel2hz`                            |
+| `hz2mel`               | Hz to Mel                                         | `hz2mel`                            |
+| `lifter`               | Apply a cepstral lifter the the matrix of cepstra | `lifter`                            |
+| `mfcc`                 | Mel Frequency Cepstral Coefficients               | `mfcc`                              |
+| `fbank`                | Filterbank Energies                               | `fbank`                             |
+| `logfbank`             | Log Filterbank Energies                           | `logfbank`                          |
+| `ssc`                  | Spectral Subband Centroids                        | `ssc`                              |
 
 
 ## TODO
@@ -126,12 +156,11 @@ void rfft(size_t nframes, size_t nrows, const float *inout, ...) {
 * FFT
   * [ ] Implement more FFT functions defined in `scipy.fft`.
   * [ ] 2D FFT
-* [ ] Port `python_speech_features`
-  * [ ] `python_speech_features.fbank`
-  * [ ] `python_speech_features.logfbank`
-  * [ ] `python_speech_features.mfcc`
-  * [ ] `python_speech_features.ssc`
+  * [ ] Replace pocketfft with our own C++11 FFT routuine.
+* [ ] Port more `python_speech_features`
 * [ ] Write our own FFT routine.
+* [ ] Implement speech features implemented in sox, librosa, etc.
+* [ ] Plot and save figure/image in JPG/PNG/EXR
 
 ## Developer note
 
@@ -153,4 +182,4 @@ NanoSNAP is licensed under MIT license.
 * fft2d : Very permissive license. See `src/fft2d/readme.txt` for details. Copyright(C) 1996-2001 Takuya OOURA
 * python_speech_features : The MIT License (MIT). Copyright (c) 2013 James Lyons. https://github.com/jameslyons/python_speech_features
 * pocketfft : FFT library used in numpy. Copyright (C) 2004-2018 Max-Planck-Society. 3-clause BSD-tyle license. https://gitlab.mpcdf.mpg.de/mtr/pocketfft
-
+* c_speech_features : Copyright (c) 2017 Chris Lord. MIT license. https://github.com/Cwiiis/c_speech_features

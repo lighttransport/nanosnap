@@ -89,10 +89,6 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
   return true;
 }
 
-void medfilt(float x, float *y) {
-  // TODO(LTE): Implement.
-  (*y) = x;
-}
 
 bool convolve(const float *_a, const size_t _n, const float *_v,
               const size_t _m, std::vector<float> *output, const int mode) {

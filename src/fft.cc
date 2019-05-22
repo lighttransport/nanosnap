@@ -12,8 +12,8 @@
 namespace nanosnap {
 
 // 1D real fft.
-bool rfft(const float *signal, const size_t fft_size, const size_t nframes,
-          const size_t nrows, std::complex<float> *output,
+bool rfft(const float *signal, const size_t nframes,
+          const size_t nrows, const size_t fft_size, std::vector<std::complex<float>> *output,
           const bool normalize) {
   if (signal == nullptr) {
     return false;
@@ -53,10 +53,11 @@ bool rfft(const float *signal, const size_t fft_size, const size_t nframes,
     return false;
   }
 
-  // from double.
+  // Cast from double to float.
+  output->resize(dout.size());
   for (size_t j = 0; j < nrows; j++) {
     for (size_t i = 0; i < output_nframes; i++) {
-      output[j * output_nframes + i] =
+      (*output)[j * output_nframes + i] =
           std::complex<float>(float(dout[2 * (j * output_nframes + i) + 0]),
                               float(dout[2 * (j * output_nframes + i) + 1]));
     }

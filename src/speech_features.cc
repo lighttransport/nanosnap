@@ -34,14 +34,11 @@ THE SOFTWARE.
 
 #include <iostream>  // dbg
 
-// pocketfft
-
 namespace nanosnap {
 
 namespace {
 
 constexpr float kPI = 3.141592f;
-
 
 #if 0
 template <typename T>
@@ -77,64 +74,64 @@ size_t calcualte_nfft(float samplerate, const float winlen) {
 }
 #endif
 
-//
-// Frame a signal into overlapping frames
-//
-// sig: the audio signal to frame.
-// sig_len: length of `sig`..
-// _frame_len: length of each frame measured in samples
-// _frame_step: length of each frame measured in samples
-// winfunc: Window function(default =
-//
-static std::vector<float> framesig(const float *sig, const size_t sig_len, const float _frame_len,
-              const float _frame_step,
-              std::function<std::vector<float>(int)> winfunc = fIdentityWindowingFunction,
-              const bool stride_trick = false) {
-  // TODO(LTE): Implement;
-  (void)winfunc;
-  (void)stride_trick;
+static std::vector<float> preemphasis(const float *signal, size_t sig_len,
+                                      float coeff) {
+  std::vector<float> preemph;
+  preemph.resize(sig_len);
 
-  // Fortunately, C++11 has `round` function for round half up.
-  int frame_len = int(std::round(_frame_len));
-  int frame_step = int(std::round(_frame_step));
+  for (size_t i = sig_len - 1; i >= 1; i--) {
+    preemph[i] = signal[i] - signal[i - 1] * coeff;
+  }
+  preemph[0] = signal[0];
 
-  int num_frames;
-  if (int(sig_len) <= frame_len) {
-    num_frames = 1;
+  return preemph;
+}
+
+static std::vector<float> framesig(
+    const float *signal, const int sig_len, const int frame_len,
+    const int padded_frame_len, const int frame_step,
+    std::function<float(int)> winfunc = fIdentityWindowingFunction) {
+  // Based on c_speech_features
+  int frame_width = std::max(padded_frame_len, frame_len);
+
+  int nframes;
+  if (sig_len > frame_len) {
+    nframes = 1 + int(std::ceil((sig_len - frame_len) / float(frame_step)));
   } else {
-    num_frames = 1 + int(std::ceil((float(sig_len) - float(frame_len)) / float(frame_step)));
+    nframes = 1;
   }
 
-  int pad_len = (num_frames - 1) * frame_step + frame_len;
+  std::vector<int> indices;
+  indices.resize(size_t(nframes * frame_len));
 
-  std::vector<float> padded_signal;
-  padded_signal.resize(sig_len);
-  memcpy(padded_signal.data(), sig, sizeof(float) * sig_len);
-
-  // apped zeros.
-  for (int i = 0; i < pad_len; i++) {
-    padded_signal.emplace_back(0.0f);
+  for (int i = 0, idx = 0; i < nframes; i++) {
+    int base = i * frame_step;
+    for (int j = 0; j < frame_len; j++, idx++) {
+      indices[size_t(idx)] = base + j;
+    }
   }
 
-  std::vector<float> frames; // length =
-  std::vector<float> win; // length = frame_len
-  if (stride_trick) {
-    // evaluate windowing function.
-    win = winfunc(frame_len);
-  } else {
-  }
+  std::vector<float> frames;
+  frames.resize(size_t(nframes * frame_width));
 
-  // frames * win
-  assert(frames.size() == win.size());
-  for (size_t i = 0; i < win.size(); i++) {
-    frames[i] *= win[i];
+  for (int i = 0, idx = 0, iidx = 0; i < nframes; i++) {
+    for (int j = 0; j < frame_len; j++, idx++, iidx++) {
+      int index = indices[size_t(iidx)];
+      frames[size_t(idx)] = index < sig_len ? signal[size_t(index)] : 0.0;
+
+      // apply windowing function
+      frames[size_t(idx)] *= winfunc(j);
+    }
+    for (int j = frame_len; j < padded_frame_len; j++, idx++) {
+      frames[size_t(idx)] = 0.0;
+    }
   }
 
   return frames;
 }
 
-// Input is a 2D array. frames[D][N]
-bool magspec(const size_t nframes, const size_t nrows, const float *frames,
+// Input is a 2D array. frames[nrows][nframes]
+bool magspec(const float *frames, const size_t nframes, const size_t nrows,
              const size_t NFFT, std::vector<float> *output) {
   /*
     """Compute the magnitude spectrum of each frame in frames. If frames is an
@@ -160,25 +157,23 @@ bool magspec(const size_t nframes, const size_t nrows, const float *frames,
   }
 
   std::vector<std::complex<float>> complex_output;
-  size_t output_num_elements = nrows * (NFFT / 2 + 1);
-  complex_output.resize(output_num_elements);
 
-  bool ret = rfft(frames, NFFT, nframes, nrows, complex_output.data());
+  bool ret = rfft(frames, NFFT, nframes, nrows, &complex_output);
   if (!ret) {
     return false;
   }
 
-  output->resize(output_num_elements);
+  output->resize(complex_output.size());
 
   // Take an absolute of complex value.
-  for (size_t i = 0; i < output_num_elements; i++) {
+  for (size_t i = 0; i < complex_output.size(); i++) {
     (*output)[i] = std::fabs(complex_output[i]);
   }
 
   return true;
 }
 
-bool powspec(const size_t nframes, const size_t nrows, const float *frames,
+bool powspec(const float *frames, const size_t nframes, const size_t nrows,
              const size_t NFFT, std::vector<float> *output) {
   /*
   """Compute the power spectrum of each frame in frames. If frames is an NxD
@@ -192,13 +187,13 @@ bool powspec(const size_t nframes, const size_t nrows, const float *frames,
   return 1.0 / NFFT * numpy.square(magspec(frames, NFFT))
   */
 
-  bool ret = magspec(nframes, nrows, frames, NFFT, output);
+  bool ret = magspec(frames, nframes, nrows, NFFT, output);
 
   if (!ret) {
     return false;
   }
 
-  // 1 / NFFT
+  // Scale by `1 / NFFT`
   const float k = 1.0f / float(NFFT);
   for (size_t i = 0; i < output->size(); i++) {
     (*output)[i] *= k;
@@ -207,26 +202,46 @@ bool powspec(const size_t nframes, const size_t nrows, const float *frames,
   return true;
 }
 
-static std::vector<float> get_filterbanks(const int nfilt = 20, const int nfft = 512,
-                                   const float samplerate = 16000, const float lowfreq = 0,
-                                   const float highfreq = -1.0f) {
-  // TODO(LTE): Implenment
-  std::vector<float> fb;
+static std::vector<float> get_filterbanks(const int nfilt, const int nfft,
+                                          const float samplerate,
+                                          const float lowfreq,
+                                          const float highfreq) {
+  // Based on c_speech_features.
+  int feat_width = nfft / 2 + 1;
+  float lowmel = hz2mel(lowfreq);
+  float highmel = hz2mel((highfreq <= lowfreq) ? samplerate / 2.0f : highfreq);
+  StackVector<int, 32> bin;
+  bin->resize(size_t(nfilt + 2));
 
-  (void)nfilt;
-  (void)nfft;
-  (void)samplerate;
-  (void)lowfreq;
-  (void)highfreq;
+  std::vector<float> fbank(size_t(nfilt * feat_width));
 
-  return fb;
+  for (size_t i = 0; i < size_t(nfilt + 2); i++) {
+    const float melpoint = ((highmel - lowmel) / float(nfilt + 1) * i) + lowmel;
+    bin[i] = int(std::floor(((nfft + 1) * mel2hz(melpoint) / samplerate)));
+  }
+
+  for (size_t i = 0, idx = 0; i < size_t(nfilt);
+       i++, idx += size_t(feat_width)) {
+    int start = std::min(bin[i], bin[i + 1]);
+    int end = std::max(bin[i], bin[i + 1]);
+    for (int j = start; j < end; j++) {
+      fbank[idx + size_t(j)] = (j - bin[i]) / float(bin[i + 1] - bin[i]);
+    }
+    start = std::min(bin[i + 1], bin[i + 2]);
+    end = std::max(bin[i + 1], bin[i + 2]);
+    for (int j = start; j < end; j++) {
+      fbank[idx + size_t(j)] =
+          (bin[i + 2] - j) / float(bin[i + 2] - bin[i + 1]);
+    }
+  }
+
+  return fbank;
 }
-
 
 }  // namespace
 
 bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeff,
-            float *output, const int L) {
+            std::vector<float> *output, const int L) {
   // """Apply a cepstral lifter the the matrix of cepstra. This has the effect
   // of increasing the magnitude of the high frequency DCT coeffs.
 
@@ -251,9 +266,11 @@ bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeff,
     return false;
   }
 
+  output->resize(nframes * ncoeff);
+
   if (L <= 0) {
     // Do nothing. Simply copy `cepstra`
-    memcpy(output, cepstra, sizeof(float) * nframes * ncoeff);
+    memcpy(output->data(), cepstra, sizeof(float) * nframes * ncoeff);
     return true;
   }
 
@@ -267,18 +284,19 @@ bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeff,
 
   for (size_t f = 0; f < nframes; f++) {
     for (size_t i = 0; i < ncoeff; i++) {
-      output[f * ncoeff + i] = lift[i] * cepstra[f * ncoeff + i];
+      (*output)[f * ncoeff + i] = lift[i] * cepstra[f * ncoeff + i];
     }
   }
 
   return true;
 }
 
-bool fbank(const float *_signal, const size_t nframes, const float samplerate,
-           const float winlen, const float winstep,
-           const std::function<std::vector<float>(int)> winfunc,
-           const int nfilt, const int nfft, const float lowfreq,
-           const float highfreq, const float preemph) {
+ssize_t fbank(const float *_signal, const size_t sig_len,
+              const float samplerate, const float winlen, const float winstep,
+              const std::function<float(int)> winfunc, const int nfilt,
+              const int nfft, const float lowfreq, const float highfreq,
+              const float preemph, std::vector<float> *features,
+              std::vector<float> *energies) {
   /*
     highfreq= highfreq or samplerate/2
     signal = sigproc.preemphasis(signal,preemph)
@@ -297,7 +315,11 @@ bool fbank(const float *_signal, const size_t nframes, const float samplerate,
   */
   if (samplerate <= 0.0f) {
     // invalid parameter
-    return false;
+    return -1;
+  }
+
+  if (!features) {
+    return -2;
   }
 
   // input signal is 1D with length `nframes`.
@@ -306,43 +328,50 @@ bool fbank(const float *_signal, const size_t nframes, const float samplerate,
   {
     // y[0] = x[0]
     // y[n] = x[n] - coeff * x[n-1] for n > 0
-    signal.resize(nframes);
+    signal.resize(sig_len);
 
     signal[0] = _signal[0];
-    for (size_t i = 1; i < nframes; i++) {
+    for (size_t i = 1; i < sig_len; i++) {
       signal[i] = _signal[i] - preemph * signal[i - 1];
     }
   }
 
+  int frame_len = int(std::round(winlen * samplerate));
+  int frame_step = int(std::round(winstep * samplerate));
+
   //  frames = sigproc.framesig(signal, winlen*samplerate, winstep*samplerate,
   //  winfunc)
-  std::vector<float> frames = framesig(signal.data(), nframes, winlen * samplerate, winstep * samplerate, winfunc);
+  std::vector<float> frames =
+      framesig(signal.data(), int(sig_len), frame_len,
+               /* padded framelen */ nfft, frame_step, winfunc);
 
-  size_t nrows = 1;  // 1D array
+  size_t nframes = frames.size();
 
   // pspec = sigproc.powspec(frames,nfft)
   std::vector<float> pspec;
   {
-    bool ret = powspec(nframes, nrows, frames.data(), size_t(nfft), &pspec);
+    bool ret =
+        powspec(frames.data(), nframes, /* nrows */ 1, size_t(nfft), &pspec);
     if (!ret) {
       return false;
     }
   }
 
-  std::vector<float> feat;
+  const size_t feature_width = size_t((nfft / 2) + 1);
 
   //  energy = numpy.sum(pspec,1) # this stores the total energy in each frame
-  std::vector<float> energy;
-  energy.resize(nrows);
-  {
-    for (size_t j = 0; j < nrows; j++) {
-      energy[j] = 0.0f;
-      for (size_t i = 0; i < nframes; i++) {
-        energy[j] += pspec[j * nframes + i];
-      }
+  if (energies) {
+    energies->resize(nframes);
+    {
+      for (size_t j = 0; j < nframes; j++) {
+        float energy = 0.0f;
+        for (size_t i = 0; i < feature_width; i++) {
+          energy += pspec[j * feature_width + i];
+        }
 
-      // energy = numpy.where(energy == 0,numpy.finfo(float).eps,energy)
-      energy[j] = std::max(energy[j], std::numeric_limits<float>::epsilon());
+        // energy = numpy.where(energy == 0,numpy.finfo(float).eps,energy)
+        (*energies)[j] = std::max(energy, std::numeric_limits<float>::min());
+      }
     }
   }
 
@@ -352,29 +381,31 @@ bool fbank(const float *_signal, const size_t nframes, const float samplerate,
 
   //  feat = numpy.dot(pspec,fb.T) # compute the filterbank energies
   {
-    for (size_t j = 0; j < nrows; j++) {
-      for (size_t i = 0; i < nframes; i++) {
-        feat[j * nframes + i] = 0.0f;
-        for (size_t k = 0; k < nframes; k++) {
-          // we don't need to compute transpose of `fb`
-          feat[j * nframes + i] += pspec[j * nframes + k] * fb[j * nframes + k];
+    for (size_t i = 0, idx = 0, pidx = 0; i < size_t(nframes);
+         i++, idx += size_t(nfilt), pidx += feature_width) {
+      for (size_t j = 0, fidx = 0; j < size_t(nfilt); j++) {
+        float feat = 0.0f;
+        for (size_t k = 0; k < feature_width; k++, fidx++) {
+          feat += pspec[pidx + k] * fb[fidx];
         }
-      }
-    }
 
-    // avoid zero
-    for (size_t j = 0; j < feat.size(); j++) {
-      feat[j] = std::max(feat[j], std::numeric_limits<float>::epsilon());
+        // avoid zero
+        (*features)[idx + j] =
+            std::max(feat, std::numeric_limits<float>::min());
+      }
     }
   }
 
-  return true;
+  return ssize_t(nframes);
 }
 
-#if 0
-bool mfcc(const std::vector<float> &signal, std::vector<float> *output, const float winlen, const size_t nfft,
-          const bool calculate_nfft, const bool append_energy) {
-  // Based on python_speech_features
+bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
+          const float winlen, const float winstep, const size_t ncep,
+          const size_t nfilt, const size_t nfft, const float low_freq,
+          const float high_freq, const float preemph, const size_t cep_lifter,
+          const bool append_energy, const std::function<float(int)> winfunc,
+          std::vector<float> *out_mfcc) {
+  //
   // nfft = nfft or calculate_nfft(samplerate, winlen)
   // feat,energy =
   // fbank(signal,samplerate,winlen,winstep,nfilt,nfft,lowfreq,highfreq,preemph,winfunc)
@@ -384,37 +415,134 @@ bool mfcc(const std::vector<float> &signal, std::vector<float> *output, const fl
   // if appendEnergy: feat[:,0] = numpy.log(energy) # replace first cepstral
   // coefficient with log of frame energy return feat
 
-  size_t nfft;
-  if (calculate_nfft) {
-    nfft = CalculateNfft(samplerate, winlen)
-  } else {
-    nfft = _nfft;
-  }
-
-#if 0
   std::vector<float> feat;
   std::vector<float> energy;
 
-  feat, energy = fbank(signal, samplerate, winlen, winstep, nfilt, nfft,
-                       lowfreq, highfreq, preemph, winfunc)
+  ssize_t nframes = fbank(signal, sig_len, samplerate, winlen, winstep, winfunc,
+                          int(nfilt), int(nfft), low_freq, high_freq, preemph,
+                          &feat, append_energy ? &energy : nullptr);
 
-        // Take a log.
-        for (size_t i = 0; i < feat.size(); t++) {
-    feat[i] = std::log(feat[i]);
+  if (nframes <= 0) {
+    return false;
   }
 
-  // feat = dct(feat, type=2, axis=1, norm='ortho')[:,:numcep]
-  // feat = lifter(feat,ceplifter)
+  // DCT is based on c_speech_features code.
 
-  if (appendEnergy) {
-    // replace first cepstral coefficient with log of frame energy
-    // feat[:,0] = numpy.log(energy) # replace first cepstral coefficient with
-    // log of frame energy
+  // Allocate an array so we can calculate the inner loop multipliers
+  // in the DCT-II just one time.
+  std::vector<float> dct2f;
+  dct2f.resize(nfilt * ncep);
+
+  // Perform DCT-II
+  float sf1 = std::sqrt(1 / (4 * float(nfilt)));
+  float sf2 = std::sqrt(1 / (2 * float(nfilt)));
+
+  std::vector<float> mfcc;
+  mfcc.resize(size_t(nframes) * ncep);
+
+  for (size_t i = 0, idx = 0, fidx = 0; i < size_t(nframes);
+       i++, idx += ncep, fidx += nfilt) {
+    for (size_t j = 0, didx = 0; j < ncep; j++) {
+      float sum = 0.0;
+      for (size_t k = 0; k < nfilt; k++, didx++) {
+        if (i == 0) {
+          dct2f[didx] = std::cos(kPI * j * (2 * k + 1) / float(2 * nfilt));
+        }
+        sum += float(feat[fidx + k]) * dct2f[didx];
+      }
+      mfcc[idx + j] = float(sum * 2.0f * ((i == 0 && j == 0) ? sf1 : sf2));
+    }
   }
 
-  return feat
-#endif
+  // Apply a cepstral lifter
+  if (cep_lifter > 0) {
+    bool ret = lifter(mfcc.data(), size_t(nframes), size_t(ncep), out_mfcc,
+                      int(cep_lifter));
+    if (!ret) {
+      return false;
+    }
+  } else {
+    (*out_mfcc) = mfcc;
+  }
+
+  // Append energies
+  if (append_energy) {
+    for (size_t i = 0, idx = 0; i < size_t(nframes); i++, idx += ncep) {
+      (*out_mfcc)[idx] = std::log(energy[i]);
+    }
+  }
+
+  return true;
 }
-#endif
+
+ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
+            const float winlen, const float winstep, const int nfilt,
+            const int nfft, const int low_freq, const int high_freq,
+            const float preemph_coeff, std::function<float(int)> winfunc,
+            std::vector<float> *features) {
+  // based on c_speech_features
+  std::vector<float> preemph = preemphasis(signal, sig_len, preemph_coeff);
+
+  int frame_len = int(std::round(winlen * samplerate));
+  int frame_step = int(std::round(winstep * samplerate));
+  int feat_width = nfft / 2 + 1;
+
+  // Frame the signal into overlapping frames
+  std::vector<float> frames = framesig(preemph.data(), int(sig_len), frame_len,
+                                       nfft, frame_step, winfunc);
+
+  size_t nframes = frames.size();
+
+  // Compute the power spectrum of the frames
+  std::vector<float> pspec;
+  {
+    if (!powspec(frames.data(), nframes, /* nrows */ 1, size_t(nfft), &pspec)) {
+      return -1;
+    }
+  }
+
+  // Make sure there are no zeroes in the power spectrum
+  for (size_t i = 0, idx = 0; i < nframes; i++) {
+    for (size_t j = 0; j < size_t(feat_width); j++, idx++) {
+      pspec[idx] = std::max(pspec[idx], std::numeric_limits<float>::min());
+    }
+  }
+
+  // Compute the filter-bank energies
+  std::vector<float> fbank =
+      get_filterbanks(nfilt, nfft, samplerate, low_freq, high_freq);
+  std::vector<float> feat;
+  feat.resize(nframes * size_t(nfilt));
+
+  for (size_t i = 0, idx = 0, pidx = 0; i < nframes;
+       i++, idx += size_t(nfilt), pidx += size_t(feat_width)) {
+    for (size_t j = 0, fidx = 0; j < size_t(nfilt); j++) {
+      for (size_t k = 0; k < size_t(feat_width); k++, fidx++) {
+        feat[idx + j] += pspec[pidx + k] * fbank[fidx];
+      }
+    }
+  }
+
+  // Calculate Spectral Sub-band Centroid features
+  std::vector<float> ssc;
+  ssc.resize(nframes * size_t(nfilt));
+
+  const float r = ((samplerate / 2) - 1) / float(feat_width - 1);
+  for (size_t i = 0, idx = 0, pidx = 0; i < nframes;
+       i++, idx += size_t(nfilt), pidx += size_t(feat_width)) {
+    for (size_t j = 0, fidx = 0; j < size_t(nfilt); j++) {
+      float R = 1;
+      for (size_t k = 0; k < size_t(feat_width); k++, fidx++) {
+        ssc[idx + j] += pspec[pidx + k] * R * fbank[fidx];
+        R += r;
+      }
+      ssc[idx + j] /= feat[idx + j];
+    }
+  }
+
+  (*features) = std::move(ssc);
+
+  return ssize_t(nframes);
+}
 
 }  // namespace nanosnap

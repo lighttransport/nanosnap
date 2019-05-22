@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.5.1)
 # ------------------------------------------------------------------------------
 option(NANOSNAP_BUILD_EXAMPLES "Build NanoSNAP example codes" ON)
 option(NANOSNAP_BUILD_TESTS "Build NanoSNAP test codes" ON)
-message(STATUS "NanoSNAP: Build examples: ${BUILD_EXAMPLES}, tests: ${BUILD_TESTS}")
+message(STATUS "NanoSNAP: Build examples: ${NANOSNAP_BUILD_EXAMPLES}, tests: ${NANOSNAP_BUILD_TESTS}")
 
 
 # ------------------------------------------------------------------------------
