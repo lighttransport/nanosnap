@@ -44,21 +44,58 @@ namespace nanosnap {
 ///
 
 ///
+/// @brief pad 1D array with border mode `reflect`
+///
+/// numpy.pad()
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html
+///
+/// @param[in] input Input 1D array
+/// @param[in] n The number of elements in `input`.
+/// @param[in] pad_width_before Padding width to left side.
+/// @param[in] pad_width_after Padding width to right side.
+/// @param[out] output Padded output array
+/// @return true upon success.
+///
+
+bool pad_reflect(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output);
+
+///
 /// @brief 1D Median filter
 ///
 /// For k = 2m+1, y(i) is the median of x(i-m:i+m).
 ///
-/// @param[in] n The number of elements in `x`
 /// @param[in] x Input
+/// @param[in] n The number of elements in `x`
 /// @param[in] k Window size. Must be odd. Usually 3.
-/// @param[in] y Output
+/// @param[out] y Output
 /// @param[in] include_nan Optional. Omit NaN value when false.
 /// @param[in] padding Optional. zero padding if true. false = truncate.
 ///
 /// @return false when Window size is not odd number.
 ///
-bool medfilt1(const size_t n, const float *x, const int k, float *y,
+bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y,
               bool include_nan = false, bool padding = true);
+
+///
+/// @brief Filter data along one-dimension with an IIR or FIR filter.
+///
+/// https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.signal.lfilter.html
+///
+/// Supports 1D or 2D array for `x`.
+/// TODO(LTE): Support axis, zi
+///
+/// @param[in] b The numerator coefficient vector in a 1-D sequence.
+/// @param[in] nb The length of `a`.
+/// @param[in] a The denominator coefficient vector in a 1-D sequence. If a[0] is not 1, then both a and b are normalized by a[0].
+/// @param[in] na The length of `b`.
+/// @param[in] x Input array
+/// @param[in] nx The number of columns of `x`.
+/// @param[in] mx The number of rows of `x`. 1 for 1D array.
+///
+/// @return true upon success.
+///
+bool lfilter(const float *b, const size_t nb, const float *a, const size_t na, const float *x, const size_t nx, const size_t mx);
+
 
 ///
 /// @brief Returns the discrete, linear convolution of two 1D sequences.
@@ -276,8 +313,10 @@ bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeffs,
 /// `samplerate/2`.
 /// @param[in] preemph apply preemphasis filter with preemph as coefficient. 0
 /// is no filter. default 0.97.
-/// @param[in] cep_lifter apply a lifter to final cepstral coefficients. 0 is no lifter. Default is 22.
-/// @param[in] append_energy if this is true, the zeroth cepstral coefficient is replaced with the log of the total frame energy.
+/// @param[in] cep_lifter apply a lifter to final cepstral coefficients. 0 is no
+/// lifter. Default is 22.
+/// @param[in] append_energy if this is true, the zeroth cepstral coefficient is
+/// replaced with the log of the total frame energy.
 /// @param[in] winfunc Windowing function. Use `fIdentityWindowingFunction` if
 /// you don't need this feature.
 /// @param[out] mfcc MFCC features.
@@ -287,8 +326,7 @@ bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
           const float winlen, const float winstep, const size_t ncep,
           const size_t nfilt, const size_t nfft, const float low_freq,
           const float high_freq, const float preemph, const size_t cep_lifter,
-          const bool append_energy,
-          const std::function<float(int)> winfunc,
+          const bool append_energy, const std::function<float(int)> winfunc,
           std::vector<float> *mfcc);
 
 ///
@@ -315,14 +353,15 @@ bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
 /// @param[out] features Output features.
 /// @param[out] energies Optional. Output energies(can be nullptr).
 ///
-/// @return The number of frames(positive value). Negative value means there was an error.
+/// @return The number of frames(positive value). Negative value means there was
+/// an error.
 ///
 ssize_t fbank(const float *signal, const size_t nframes, const float samplerate,
-           const float winlen, const float winstep,
-           const std::function<float(int)> winfunc,
-           const int nfilt, const int nfft, const float lowfreq,
-           const float highfreq, const float preemph,
-           std::vector<float> *features, std::vector<float> *energies);
+              const float winlen, const float winstep,
+              const std::function<float(int)> winfunc, const int nfilt,
+              const int nfft, const float lowfreq, const float highfreq,
+              const float preemph, std::vector<float> *features,
+              std::vector<float> *energies);
 
 ///
 /// \brief  Compute log Mel-filterbank energy features from an audio signal.
@@ -348,14 +387,15 @@ ssize_t fbank(const float *signal, const size_t nframes, const float samplerate,
 /// @param[out] features Output features.
 /// @param[out] energies Optional. Output energies(can be nullptr).
 ///
-/// @return The number of frames(positive value). Negative value means there was an error.
+/// @return The number of frames(positive value). Negative value means there was
+/// an error.
 ///
-ssize_t logfbank(const float *signal, const size_t nframes, const float samplerate,
-              const float winlen, const float winstep,
-              const std::function<float(int)> winfunc,
-              const int nfilt, const int nfft, const float lowfreq,
-              const float highfreq, const float preemph,
-              std::vector<float> *features, std::vector<float> *energies);
+ssize_t logfbank(const float *signal, const size_t nframes,
+                 const float samplerate, const float winlen,
+                 const float winstep, const std::function<float(int)> winfunc,
+                 const int nfilt, const int nfft, const float lowfreq,
+                 const float highfreq, const float preemph,
+                 std::vector<float> *features, std::vector<float> *energies);
 
 ///
 /// @brief Compute Spectral Subband Centroid features from an audio signal.
@@ -378,16 +418,14 @@ ssize_t logfbank(const float *signal, const size_t nframes, const float samplera
 /// you don't need this feature.
 /// @param[out] features Output SSC. The length = nframes(return value) * nfilt.
 ///
-/// @return The number of frames(positive). Negative value when there was an error.
+/// @return The number of frames(positive). Negative value when there was an
+/// error.
 ///
 ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
-         const float winlen, const float winstep,
-         const int nfilt,
-         const int nfft, const int lowfreq, const int highfreq,
-         const float preemph,
-        std::function<float(int)> winfunc,
-        std::vector<float> *features);
-
+            const float winlen, const float winstep, const int nfilt,
+            const int nfft, const int lowfreq, const int highfreq,
+            const float preemph, std::function<float(int)> winfunc,
+            std::vector<float> *features);
 
 ///
 /// @brief Calculates the FFT size as a power of two greater than or equal to
@@ -413,6 +451,36 @@ inline int calculate_nfft(const float samplerate, const float winlen) {
 
   return nfft;
 }
+
+///
+/// @brief Load 1D or 2D array data in ASCII format.
+/// TODO(LTE): Support delimiter character.
+///
+/// @param[in] filename File name
+/// @param[out] values Array of loaded data.
+/// @param[out] n The number of columns
+/// @param[out] m The number of rows
+/// @param[out] err Error message(if exists)
+///
+/// @return true upon success. false when error(and `err` will be filled)
+///
+bool loadtxt(const std::string &filename, std::vector<float> *values, int *n,
+             int *m, std::string *err);
+
+///
+/// @brief Save 1D or 2D array data in ASCII format.
+/// TODO(LTE): Support delimiter character.
+///
+/// @param[in] filename File name
+/// @param[in] values Array of data.
+/// @param[in] n The number of columns
+/// @param[in] m The number of rows
+/// @param[out] err Error message(if exists)
+///
+/// @return true upon success. false when error(and `err` will be filled)
+///
+bool savetxt(const std::string &filename, const float *values, const int n,
+             const int m, std::string *err);
 
 }  // namespace nanosnap
 

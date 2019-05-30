@@ -3,6 +3,9 @@
 #include "stack_vector.h"
 
 #include <cmath>
+#include <cstring>
+#include <memory>
+
 //#include <iostream> // dbg
 
 namespace nanosnap {
@@ -45,7 +48,7 @@ static inline float find_median(const size_t n, float *a) {
 
 }  // namespace
 
-bool medfilt1(const size_t n, const float *x, const int k, float *y,
+bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y,
               bool include_nan, bool padding) {
   if ((k % 2) != 1) {
     // window size must be odd.
@@ -57,6 +60,8 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
 
   StackVector<float, 64> buf;
   buf->resize(size_t(k * k));
+
+  y->resize(n);
 
   // TODO(LTE): Test if k < 2
 
@@ -83,7 +88,7 @@ bool medfilt1(const size_t n, const float *x, const int k, float *y,
       buf->push_back(v);
     }
 
-    y[i] = find_median(size_t(k), buf->data());
+    (*y)[size_t(i)] = find_median(size_t(k), buf->data());
   }
 
   return true;
@@ -269,4 +274,42 @@ bool convolve(const float *_a, const size_t _n, const float *_v,
   return true;
 }
 
-}  // namespace nanosnap
+bool lfilter(const float *b, const size_t nb, const float *a, const size_t na,
+  const float *x, const size_t nx, const size_t mx)
+{
+  std::vector<float> b_normalized(nb);
+  memcpy(b_normalized.data(), b, sizeof(float) * nb);
+
+  // normalize `b' by a[0]
+  for (size_t i = 0; i < nb; i++) {
+    b_normalized[i] /= a[0];
+  }
+
+  // TODO(LTE): Implement
+  (void)na;
+
+/*
+        ind = out_full.ndim * [slice(None)]
+        if zi is not None:
+            ind[axis] = slice(zi.shape[axis])
+            out_full[ind] += zi
+
+        ind[axis] = slice(out_full.shape[axis] - len(b) + 1)
+out = out_full[ind]
+*/
+
+  // out_full = np.apply_along_axis(lambda y: np.convolve(b, y), axis, x)
+  // Apply convolve for each row(axis = -1 behavior in scipy.signal.lfilter).
+  for (size_t j = 0; j < mx; j++) {
+    std::vector<float> output;
+    bool ret = convolve(b, nb, &x[j * nx], nx, &output, /* mode */0);
+    if (!ret) {
+      return false;
+    }
+  }
+
+  return false;
+
+}
+
+}  // namespace nanosna

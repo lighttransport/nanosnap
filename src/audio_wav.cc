@@ -154,7 +154,7 @@ bool wav_write(const std::string &filename, const uint32_t rate,
 
   if (err) {
     (*err) +=
-        "IO is disabled in this build. Use `wav_read_from_buffer` instead.\n";
+        "IO is disabled in this build. Use `wav_write_to_buffer` instead.\n";
   }
 
   return false;
@@ -188,6 +188,8 @@ bool wav_write(const std::string &filename, const uint32_t rate,
         filename + "\n";
     return false;
   }
+
+  // TODO(LTE): Implement
 
   (void)data;
   (void)samples;

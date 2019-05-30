@@ -42,11 +42,13 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # ------------------------------- libnanosnap.so -------------------------------
 add_library(nanosnap SHARED
+    ${PROJECT_SOURCE_DIR}/src/ndarray.cc
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
     ${PROJECT_SOURCE_DIR}/src/speech_features.cc
     ${PROJECT_SOURCE_DIR}/src/fft.cc
     ${PROJECT_SOURCE_DIR}/src/rng.cc
+    ${PROJECT_SOURCE_DIR}/src/text-load-save.cc
     ${PROJECT_SOURCE_DIR}/src/pocketfft.c
 )
 add_sanitizers(nanosnap)

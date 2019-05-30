@@ -1,8 +1,15 @@
 # NanoSNAP, Nanoscale Signal, Noise and Audio Processing library in C++11
 
 NanoSNAP is a small and portable signal, audio and noise processing library in C++11. 🤞
+NanoSNAP depends only on C++11 STL.
 
-## Install
+## Usage
+
+* For running TTS(Text-to-speech) and ASR(Automatic Speech Recognition) program on C++ application and Embedded device.
+* Image processing with neural netowork inference on C++ and Embedded device.
+* Implement audio and speech feature(e.g. `rfft`, `mfcc`) on your C++ machine learning library.
+
+## Install and integration
 
 Simply copy `include` and `src` folder to your platform.
 
@@ -16,9 +23,9 @@ Simply copy `include` and `src` folder to your platform.
 * [x] Windows
 * [x] Linux
 * [x] macOS
-* [ ] Android
-* [ ] Raspberry Pi
-* [ ] RISC-V
+* [ ] Android(not tested yet, but should work)
+* [ ] Raspberry Pi(not tested yet, but should work)
+* [ ] RISC-V(not tested yet, but should work)
 
 ## Build
 
@@ -111,6 +118,8 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | NanoSNAP               | Description            | Python equivalent                  |
 | ---------------------- | ---------------------- | ---------------------------------- |
 | `convolve`             | 1D convolution         | `numpy.convolve`                   |
+| `loadtxt`              | Load 1D or 2D array    | `numpy.loadtxt`                    |
+| `savetxt`              | Save 1D or 2D array    | `numpy.savetxt`                    |
 
 ### Random number generation
 
@@ -122,17 +131,18 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ### FFT
 
-| NanoSNAP               | Description        | Python equivalent                   |
-| ---------------------- | ------------------ | ----------------------------------- |
-| `rfft`                 | Real 1D FFT        | `numpy.fft.rfft`                    |
+| NanoSNAP               | Description                  | Python equivalent                   |
+| ---------------------- | ---------------------------- | ----------------------------------- |
+| `rfft`                 | Real 1D FFT                  | `numpy.fft.rfft`                    |
 
 ### Scipy
 
-| NanoSNAP               | Description        | Python equivalent                   |
-| ---------------------- | ------------------ | ----------------------------------- |
-| `medfilt`              | Median filter      | `scipy.signal.medfilt`              |
-| `wav_read`             | Read .WAV file     | `scipy.io.wavfile.read`             |
-| `wav_write`            | Save .WAV file     | `scipy.io.wavfile.write`            |
+| NanoSNAP               | Description                                                 | Python equivalent                   |
+| ---------------------- | ----------------------------------------------------------- | ----------------------------------- |
+| `lfilter`              | Filter data along one-dimension with an IIR or FIR filter.  | `scipy.signal.lfilt`                |
+| `medfilt`              | Median filter                                               | `scipy.signal.medfilt`              |
+| `wav_read`             | Read .WAV file                                              | `scipy.io.wavfile.read`             |
+| `wav_write`            | Save .WAV file                                              | `scipy.io.wavfile.write`            |
 
 ### Python speech features
 
@@ -147,8 +157,17 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | `ssc`                  | Spectral Subband Centroids                        | `ssc`                              |
 
 
+### Librosa
+
+| NanoSNAP               | Description                  | Python equivalent                   |
+| ---------------------- | ---------------------------- | ----------------------------------- |
+| `stft`                 | Short Term Fourier Transform | `librosa.stft`                      |
+
 ## TODO
 
+* librosa
+  * stft
+  * istft
 * [ ] Multithreading with C++11 `thread`.
   * [ ] Use `StackVector` as much as possible.
 * [ ] Read/write WAV from buffer(memory)
