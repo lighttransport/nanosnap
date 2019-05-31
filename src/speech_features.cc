@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <algorithm>
 
 #include <iostream>  // dbg
 
@@ -92,7 +93,7 @@ static std::vector<float> framesig(
     const int padded_frame_len, const int frame_step,
     std::function<float(int)> winfunc = fIdentityWindowingFunction) {
   // Based on c_speech_features
-  int frame_width = std::max(padded_frame_len, frame_len);
+  int frame_width = (std::max)(padded_frame_len, frame_len);
 
   int nframes;
   if (sig_len > frame_len) {
@@ -117,7 +118,7 @@ static std::vector<float> framesig(
   for (int i = 0, idx = 0, iidx = 0; i < nframes; i++) {
     for (int j = 0; j < frame_len; j++, idx++, iidx++) {
       int index = indices[size_t(iidx)];
-      frames[size_t(idx)] = index < sig_len ? signal[size_t(index)] : 0.0;
+      frames[size_t(idx)] = index < sig_len ? signal[size_t(index)] : 0.0f;
 
       // apply windowing function
       frames[size_t(idx)] *= winfunc(j);
@@ -167,7 +168,7 @@ bool magspec(const float *frames, const size_t nframes, const size_t nrows,
 
   // Take an absolute of complex value.
   for (size_t i = 0; i < complex_output.size(); i++) {
-    (*output)[i] = std::fabs(complex_output[i]);
+    (*output)[i] = std::abs(complex_output[i]);
   }
 
   return true;
@@ -291,7 +292,7 @@ bool lifter(const float *cepstra, const size_t nframes, const size_t ncoeff,
   return true;
 }
 
-ssize_t fbank(const float *_signal, const size_t sig_len,
+int64_t fbank(const float *_signal, const size_t sig_len,
               const float samplerate, const float winlen, const float winstep,
               const std::function<float(int)> winfunc, const int nfilt,
               const int nfft, const float lowfreq, const float highfreq,
@@ -396,7 +397,7 @@ ssize_t fbank(const float *_signal, const size_t sig_len,
     }
   }
 
-  return ssize_t(nframes);
+  return int64_t(nframes);
 }
 
 bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
@@ -418,7 +419,7 @@ bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
   std::vector<float> feat;
   std::vector<float> energy;
 
-  ssize_t nframes = fbank(signal, sig_len, samplerate, winlen, winstep, winfunc,
+  int64_t nframes = fbank(signal, sig_len, samplerate, winlen, winstep, winfunc,
                           int(nfilt), int(nfft), low_freq, high_freq, preemph,
                           &feat, append_energy ? &energy : nullptr);
 
@@ -475,7 +476,7 @@ bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
   return true;
 }
 
-ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
+int64_t ssc(const float *signal, const size_t sig_len, const int samplerate,
             const float winlen, const float winstep, const int nfilt,
             const int nfft, const int low_freq, const int high_freq,
             const float preemph_coeff, std::function<float(int)> winfunc,
@@ -510,7 +511,7 @@ ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
 
   // Compute the filter-bank energies
   std::vector<float> fbank =
-      get_filterbanks(nfilt, nfft, samplerate, low_freq, high_freq);
+      get_filterbanks(nfilt, nfft, float(samplerate), float(low_freq), float(high_freq));
   std::vector<float> feat;
   feat.resize(nframes * size_t(nfilt));
 
@@ -542,7 +543,7 @@ ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
 
   (*features) = std::move(ssc);
 
-  return ssize_t(nframes);
+  return int64_t(nframes);
 }
 
 }  // namespace nanosnap

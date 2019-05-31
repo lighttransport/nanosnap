@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 
+
 # ------------------------------------------------------------------------------
 # ----------------------------------- Options ----------------------------------
 # ------------------------------------------------------------------------------
@@ -7,12 +8,19 @@ option(NANOSNAP_BUILD_EXAMPLES "Build NanoSNAP example codes" ON)
 option(NANOSNAP_BUILD_TESTS "Build NanoSNAP test codes" ON)
 message(STATUS "NanoSNAP: Build examples: ${NANOSNAP_BUILD_EXAMPLES}, tests: ${NANOSNAP_BUILD_TESTS}")
 
+if (NANOSNAP_BUILD_TESTS)
+  if (NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/doctest/doctest")
+    message(FATAL_ERROR "doctest submodule directory is missing!\n"
+      "Please run \"git submodule update --init\" to checkout submodules")
+  endif ()
+endif (NANOSNAP_BUILD_TESTS)
 
 # ------------------------------------------------------------------------------
 # ----------------------------------- Common -----------------------------------
 # ------------------------------------------------------------------------------
 project(nanosnap CXX C)
 set (CMAKE_CXX_STANDARD 11)  # C++ 11
+
 
 # Print make commands for debug
 # set(CMAKE_VERBOSE_MAKEFILE 1)
@@ -40,8 +48,9 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 #     ${PROJECT_SOURCE_DIR}/third_party
 # )
 
-# ------------------------------- libnanosnap.so -------------------------------
-add_library(nanosnap SHARED
+# ------------------------------- libnanosnap -------------------------------
+add_library(nanosnap STATIC
+    ${PROJECT_SOURCE_DIR}/include/nanosnap/nanosnap.h
     ${PROJECT_SOURCE_DIR}/src/ndarray.cc
     ${PROJECT_SOURCE_DIR}/src/signal.cc
     ${PROJECT_SOURCE_DIR}/src/audio_wav.cc
@@ -69,11 +78,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 
-if (WIN32)
-    set_target_properties(nanosnap PROPERTIES
-        OUTPUT_NAME libnanosnap
-    )
-endif()
+#if (WIN32)
+#    set_target_properties(nanosnap PROPERTIES
+#        OUTPUT_NAME libnanosnap
+#    )
+#endif()
 
 # ------------------------------ test executables ------------------------------
 if (NANOSNAP_BUILD_TESTS)

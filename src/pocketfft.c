@@ -23,6 +23,8 @@
 //#include "npy_config.h"
 //#define restrict NPY_RESTRICT
 
+#define restrict
+
 #define RALLOC(type,num) \
   ((type *)malloc((num)*sizeof(type)))
 #define DEALLOC(ptr) \

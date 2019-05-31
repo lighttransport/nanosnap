@@ -36,6 +36,14 @@ $ cmake ..
 $ make
 ```
 
+### Build on Visual Studio 2017
+
+```
+> vcsetup.bat
+```
+
+Open `build/nanosnap.sln` and build it.
+
 ### Build and running tests
 
 ```

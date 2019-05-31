@@ -156,7 +156,7 @@ std::vector<float> random_uniform(const float lowval, const float highval,
 /// @return Drawn random samples.
 ///
 std::vector<float> random_normal(const float mean, const float stddev,
-                                 const size_t n, const size_t seed);
+                                 const size_t n, const uint32_t seed);
 
 ///
 /// Shuffle array elements in random.
@@ -178,7 +178,7 @@ std::vector<float> random_normal(const float mean, const float stddev,
 /// @return Shuffled array.
 ///
 std::vector<float> random_shuffle(const float *x, const size_t n,
-                                  const size_t seed);
+                                  const uint32_t seed);
 
 ///
 /// Shuffle array elements randomly in-place.
@@ -356,7 +356,7 @@ bool mfcc(const float *signal, const size_t sig_len, const float samplerate,
 /// @return The number of frames(positive value). Negative value means there was
 /// an error.
 ///
-ssize_t fbank(const float *signal, const size_t nframes, const float samplerate,
+int64_t fbank(const float *signal, const size_t nframes, const float samplerate,
               const float winlen, const float winstep,
               const std::function<float(int)> winfunc, const int nfilt,
               const int nfft, const float lowfreq, const float highfreq,
@@ -390,7 +390,7 @@ ssize_t fbank(const float *signal, const size_t nframes, const float samplerate,
 /// @return The number of frames(positive value). Negative value means there was
 /// an error.
 ///
-ssize_t logfbank(const float *signal, const size_t nframes,
+int64_t logfbank(const float *signal, const size_t nframes,
                  const float samplerate, const float winlen,
                  const float winstep, const std::function<float(int)> winfunc,
                  const int nfilt, const int nfft, const float lowfreq,
@@ -421,7 +421,7 @@ ssize_t logfbank(const float *signal, const size_t nframes,
 /// @return The number of frames(positive). Negative value when there was an
 /// error.
 ///
-ssize_t ssc(const float *signal, const size_t sig_len, const int samplerate,
+int64_t ssc(const float *signal, const size_t sig_len, const int samplerate,
             const float winlen, const float winstep, const int nfilt,
             const int nfft, const int lowfreq, const int highfreq,
             const float preemph, std::function<float(int)> winfunc,

@@ -9,7 +9,7 @@
 
 namespace nanosnap {
 
-std::vector<float> random_uniform(const float lowval, const float maxval, const size_t n, const size_t seed)
+std::vector<float> random_uniform(const float lowval, const float maxval, const size_t n, const uint32_t seed)
 {
   // We only allow deterministic random number generation.
   // App user must care abount how to handle seed value.
@@ -27,7 +27,7 @@ std::vector<float> random_uniform(const float lowval, const float maxval, const 
   return r;
 }
 
-std::vector<float> random_normal(const float mean, const float stddev, const size_t n, const size_t seed)
+std::vector<float> random_normal(const float mean, const float stddev, const size_t n, const uint32_t seed)
 {
   // We only allow deterministic random number generation.
   // App user must care abount how to handle seed value.
@@ -46,7 +46,7 @@ std::vector<float> random_normal(const float mean, const float stddev, const siz
 }
 
 
-std::vector<float> random_shuffle(const float *x, const size_t n, const size_t seed)
+std::vector<float> random_shuffle(const float *x, const size_t n, const uint32_t seed)
 {
   // We only allow deterministic random number generation.
   // App user must care abount how to handle seed value.

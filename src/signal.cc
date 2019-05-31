@@ -66,13 +66,13 @@ bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y
   // TODO(LTE): Test if k < 2
 
   int m = (k - 1) / 2;
-  for (ssize_t i = 0; i < ssize_t(n); i++) {
+  for (int64_t i = 0; i < int64_t(n); i++) {
     buf->clear();
-    for (ssize_t r = -m; r <= m; r++) {
-      ssize_t j = i + r;
+    for (int64_t r = -m; r <= m; r++) {
+      int64_t j = i + r;
 
       float v;
-      bool out_of_bounds = (j < 0) || (j >= ssize_t(n));
+      bool out_of_bounds = (j < 0) || (j >= int64_t(n));
       if (out_of_bounds) {
         v = 0.0f;
       } else {

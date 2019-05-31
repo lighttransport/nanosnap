@@ -48,6 +48,7 @@ THE SOFTWARE.
 #include <map>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 #if !defined(NANOCSV_NO_IO)
 #include <cstdio>
@@ -766,7 +767,7 @@ bool ParseCSVFromMemory(const char *buffer, const size_t buffer_length,
     ms_linedetection = end_time - start_time;
   }
 
-  auto num_records = 0;
+  size_t num_records = 0;
   for (size_t t = 0; t < size_t(num_threads); t++) {
     num_records += line_infos[t].size();
   }
