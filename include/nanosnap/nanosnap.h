@@ -60,6 +60,26 @@ namespace nanosnap {
 bool pad_reflect(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output);
 
 ///
+/// @brief pad 1D array with border mode `constant`
+///
+/// numpy.pad()
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.pad.html
+///
+/// Supports sigle constant value for each border.
+///
+/// @param[in] input Input 1D array
+/// @param[in] n The number of elements in `input`.
+/// @param[in] pad_width_before Padding width to left side.
+/// @param[in] pad_width_after Padding width to right side.
+/// @param[out] output Padded output array
+/// @param[in] pad_constant_value Padding constant value. Default 0.0
+/// @return true upon success.
+///
+
+bool pad_constant(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output, const float pad_constant_value = 0.0f);
+
+
+///
 /// @brief 1D Median filter
 ///
 /// For k = 2m+1, y(i) is the median of x(i-m:i+m).
@@ -136,7 +156,7 @@ bool convolve(const float *a, const size_t n, const float *v, const size_t m,
 /// @return Generated random number values.
 ///
 std::vector<float> random_uniform(const float lowval, const float highval,
-                                  const size_t n, const size_t seed);
+                                  const size_t n, const uint32_t seed);
 
 ///
 /// Draw random samples from a normal (Gaussian) distribution.
@@ -195,7 +215,7 @@ std::vector<float> random_shuffle(const float *x, const size_t n,
 /// @param[in,out] x Input/output array.
 /// @param[in] seed Seed value for RNG generator.
 ///
-void random_shuffle(float *x, const size_t n, const size_t seed);
+void random_shuffle(float *x, const size_t n, const uint32_t seed);
 
 ///
 /// @brief Read WAV file from a file.
