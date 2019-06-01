@@ -78,6 +78,25 @@ bool pad_reflect(const float *input, const size_t n, const size_t pad_width_befo
 
 bool pad_constant(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output, const float pad_constant_value = 0.0f);
 
+///
+/// @brief Create an array with the given shape and stride
+///
+/// numpy.lib.stride_tricks.as_strided()
+/// https://docs.scipy.org/doc/numpy/reference/generated/numpy.lib.stride_tricks.as_strided.html
+///
+/// In contrast to numpy's `as_strided`. NanoSNAP implementation creates new array, not a view.
+/// Input must be 1D and output shape must be up to 2D.
+///
+/// @param[in] x Input 1D array
+/// @param[in] n The number of elements in `x`
+/// @param[in] shape Shape information(2D).
+/// @param[in] strides Strides(in bytes) information(2D).
+/// @param[out] output Output array
+///
+/// @return true upon success.
+///
+bool reshape_with_strides(const float *x, const size_t n, const size_t shape[2], const size_t strides[2],
+                          std::vector<float> *output);
 
 ///
 /// @brief 1D Median filter
@@ -95,6 +114,7 @@ bool pad_constant(const float *input, const size_t n, const size_t pad_width_bef
 ///
 bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y,
               bool include_nan = false, bool padding = true);
+
 
 ///
 /// @brief Filter data along one-dimension with an IIR or FIR filter.
@@ -137,6 +157,33 @@ bool lfilter(const float *b, const size_t nb, const float *a, const size_t na, c
 ///
 bool convolve(const float *a, const size_t n, const float *v, const size_t m,
               std::vector<float> *output, const int mode);
+
+///
+/// @brief Get Hann windowing function
+///
+/// scipy.signal.windows.hann
+/// https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.hann.html#scipy.signal.windows.hann
+///
+/// @param[in] m Number of sample points in output window
+/// @param[in] symmetric Optional. true to create symmetric window. false to create periodic window. Default true.
+/// @return window function.
+///
+std::vector<float> window_hann(const size_t m, const bool symmetric = true);
+
+
+///
+/// @brief Get windowing function
+///
+/// scipy.signal.get_window
+/// https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.get_window.html
+///
+/// @param[in] window_type Name of Window function type. Currently only 'hann' is implemented.
+/// @param[in] nx The number of sampled in the window.
+/// @param[out] output Samples of windowing function.
+/// @param[in] periodic Optional. false to create symmertic window. Corresponds to `fftbins` in `scipy.signal.get_window` parameter. Default true.
+/// @return true upon succes. False when error(e.g. window_type is invalid or unimplemented)
+///
+bool get_window(const std::string &window_type, const size_t nx, std::vector<float> *output, const bool periodic = true);
 
 ///
 /// Generate sequence of uniformly random values of `n` elements.

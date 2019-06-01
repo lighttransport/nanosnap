@@ -123,11 +123,12 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ### Numpy
 
-| NanoSNAP               | Description            | Python equivalent                  |
-| ---------------------- | ---------------------- | ---------------------------------- |
-| `convolve`             | 1D convolution         | `numpy.convolve`                   |
-| `loadtxt`              | Load 1D or 2D array    | `numpy.loadtxt`                    |
-| `savetxt`              | Save 1D or 2D array    | `numpy.savetxt`                    |
+| NanoSNAP               | Description                                        | Python equivalent                    |
+| ---------------------- | -------------------------------------------------- | ------------------------------------ |
+| `reshape_with_strides` | Create an array with the given shape and strides.  | `numpy.lib.stride_tricks.as_strided` |
+| `convolve`             | 1D convolution                                     | `numpy.convolve`                     |
+| `loadtxt`              | Load 1D or 2D array                                | `numpy.loadtxt`                      |
+| `savetxt`              | Save 1D or 2D array                                | `numpy.savetxt`                      |
 
 ### Random number generation
 
@@ -170,6 +171,10 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | NanoSNAP               | Description                  | Python equivalent                   |
 | ---------------------- | ---------------------------- | ----------------------------------- |
 | `stft`                 | Short Term Fourier Transform | `librosa.stft`                      |
+
+## limited support
+
+* get_window : 'hann' only
 
 ## TODO
 
