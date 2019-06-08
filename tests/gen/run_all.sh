@@ -7,3 +7,5 @@ python gen_random_normal.py > ../testvector/random_normal.inc
 python gen_convolve_full.py > ../testvector/convolve_full.inc
 python gen_convolve_same.py > ../testvector/convolve_same.inc
 python gen_convolve_valid.py > ../testvector/convolve_valid.inc
+
+python gen_signal_get_window_hann.py > ../testvector/signal_get_window_hann.inc

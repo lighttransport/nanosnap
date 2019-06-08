@@ -93,6 +93,8 @@ if (NANOSNAP_BUILD_TESTS)
         ${PROJECT_SOURCE_DIR}/tests/test_medfilt1.cc
         ${PROJECT_SOURCE_DIR}/tests/test_rfft.cc
         ${PROJECT_SOURCE_DIR}/tests/test_convolve.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_librosa_stft.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_signal_get_window_hann.cc
         # it looks numpy.random uses slightly different configuration of Mersenne Twistter
         # and does not produce same result with std::mt19937. Disable random test for a while.
         #${PROJECT_SOURCE_DIR}/tests/test_random_uniform.cc

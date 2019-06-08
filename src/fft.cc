@@ -55,13 +55,17 @@ static bool frame_sig(const std::vector<float> &y,
   // y_frames = as_strided(y, shape=(frame_length, n_frames),
   //                       strides=(y.itemsize, hop_length * y.itemsize))
 
-  // output.shape = [n_frames][frame_length]
-  // y_frames[j][i] == y[j * hop_length + i]
+  // y_frames[j][i] == y[i * hop_length + j]
 
-  output->clear();
-  for (size_t j = 0; j < n_frames; j++) {
-    for (size_t i = 0; i < frame_length; i++) {
-      output->push_back(y[j * hop_length + i]);
+  std::cout << "y.size = " << y.size() << std::endl;
+  std::cout << "frame_sig.n_frames = " << n_frames << std::endl;
+  std::cout << "frame_length = " << frame_length << std::endl;
+  std::cout << "hop_length = " << hop_length << std::endl;
+
+  output->resize(n_frames * frame_length);
+  for (size_t j = 0; j < frame_length; j++) {
+    for (size_t i = 0; i < n_frames; i++) {
+      (*output)[j * n_frames + i] = y[i * hop_length + j];
     }
   }
 
@@ -115,7 +119,7 @@ bool rfft(const float *signal, const size_t nframes, const size_t nrows,
   }
 
   // Cast from double to float.
-  output->resize(dout.size());
+  output->resize(output_nframes * nrows);
   for (size_t j = 0; j < nrows; j++) {
     for (size_t i = 0; i < output_nframes; i++) {
       (*output)[j * output_nframes + i] =
@@ -165,8 +169,9 @@ bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
     }
   }
 
-  (void)hop_length;
-  (void)output;
+  for (size_t i = 0; i < window.size(); i++) {
+    std::cout << "window[" << i << "] = " << window[i] << "\n";
+  }
 
   std::vector<float> y_frames;
   size_t n_rows = 0;
@@ -177,18 +182,43 @@ bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
     }
   }
 
-  std::vector<float> y_modulated;
-  y_modulated.resize(sig_len);
-  memcpy(y_modulated.data(), y_frames.data(), sizeof(float) * y_frames.size());
+  // Flip dimension to match numpy(librosa)'s result.
+  // TODO(LTE): Rewrite frame_sig so that we don't flip dimension to avoid confusion.
+
+  size_t frame_length = n_rows;
+  size_t nframes = n_fft;
+
+  std::cout << "window.size = [" << window.size() << "\n";
+  std::cout << "nframes = " << nframes << "\n";
+  std::cout << "frame_length = [[" << frame_length << "\n";
+
+  for (size_t i = 0; i < y_frames.size(); i++) {
+    std::cout << "y_frames[" << i << "] = " << y_frames[i] << "\n";
+  }
+
+  std::vector<float> y_modulated(y_frames.size());
 
   // Apply window function.
-  for (size_t j = 0; j < n_rows; j++) {
-    for (size_t i = 0; i < n_fft; i++) {
-      y_modulated[j * n_fft + i] *= window[i];
+  // window.shape = [frame_length][1]
+  // (window * y).shape = [frame_length][nframes] in C++
+  for (size_t j = 0; j < nframes; j++) {
+    for (size_t i = 0; i < frame_length; i++) {
+      //y_modulated[j * frame_length + i] *= window[j];
+      // transpose
+      y_modulated[j * frame_length + i] = y_frames[i * nframes + j] * window[j];
     }
   }
 
-  bool ret = rfft(y_modulated.data(), /* frame len */n_fft, /* num frames */n_rows,  /* fft size */n_fft, output);
+  for (size_t i = 0; i < y_modulated.size(); i++) {
+    std::cout << "modulated y_frames[" << i << "] = " << y_modulated[i] << "\n";
+  }
+
+  // HACK
+  bool ret = rfft(y_modulated.data(), /* frame len */nframes, /* num frames */frame_length,  /* fft size */nframes, output);
+
+  for (size_t i = 0; i < output->size(); i++) {
+    std::cout << "output[" << i << "] = " << (*output)[i] << std::endl;
+  }
 
   return ret;
 }

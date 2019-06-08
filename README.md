@@ -174,12 +174,11 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ## limited support
 
-* get_window : 'hann' only
+* get_window : 'hann' only. `scipy.signal.get_window` equivalent.
 
 ## TODO
 
 * librosa
-  * stft
   * istft
 * [ ] Multithreading with C++11 `thread`.
   * [ ] Use `StackVector` as much as possible.

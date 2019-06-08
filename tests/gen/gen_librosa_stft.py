@@ -13,8 +13,7 @@ def gen():
     hop_length = win_length // 4 # default hop length is win_length / 4
     # window function = 'hann'
     D = numpy.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length, win_length=win_length))
-    print(D)
-
+    # print(D.shape)
 
     print('const float g_input[] = {' + print_c_array(y) + '};')
     print('const float g_reference[] = {' + print_c_array(D) + '};')
