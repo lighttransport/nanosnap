@@ -44,13 +44,13 @@ TEST_CASE("librosa_stft") {
 
   size_t nrows = result.size() / out_npoints;
 
-  CHECK(out_npoints == k_out_dim0);
-  CHECK(nrows == k_out_dim1);
+  CHECK(out_npoints == k_out_dim1);
+  CHECK(nrows == k_out_dim0);
 
   CHECK((2 * result.size()) == (sizeof(g_reference) / sizeof(g_reference[0])));
 
-  //for (size_t i = 0; i < nrows * out_npoints; i++) {
-  //  CHECK(g_reference[2 * i + 0] == Approx(result[i].real()));
-  //  CHECK(g_reference[2 * i + 1] == Approx(result[i].imag()));
-  //}
+  for (size_t i = 0; i < nrows * out_npoints; i++) {
+    CHECK(g_reference[2 * i + 0] == Approx(result[i].real()));
+    CHECK(g_reference[2 * i + 1] == Approx(result[i].imag()));
+  }
 }

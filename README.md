@@ -143,6 +143,7 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | NanoSNAP               | Description                  | Python equivalent                   |
 | ---------------------- | ---------------------------- | ----------------------------------- |
 | `rfft`                 | Real 1D FFT                  | `numpy.fft.rfft`                    |
+| `ifft`                 | Inverse Complex FFT          | `numpy.fft.ifft`                    |
 
 ### Scipy
 
@@ -171,6 +172,7 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | NanoSNAP               | Description                  | Python equivalent                   |
 | ---------------------- | ---------------------------- | ----------------------------------- |
 | `stft`                 | Short Term Fourier Transform | `librosa.stft`                      |
+| `istft`                | Inverse STFT                 | `librosa.istft`                     |
 
 ## limited support
 
@@ -178,9 +180,8 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ## TODO
 
-* librosa
-  * istft
-* [ ] Multithreading with C++11 `thread`.
+* [ ] Better error handling(report error message)
+* [ ] Multithreading using C++11 `thread`.
   * [ ] Use `StackVector` as much as possible.
 * [ ] Read/write WAV from buffer(memory)
 * [ ] Integrate with `NanoNumCp`
@@ -189,8 +190,7 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
   * [ ] 2D FFT
   * [ ] Replace pocketfft with our own C++11 FFT routuine.
 * [ ] Port more `python_speech_features`
-* [ ] Write our own FFT routine.
-* [ ] Implement speech features implemented in sox, librosa, etc.
+* [ ] Implement more speech features implemented in sox, librosa, etc.
 * [ ] Plot and save figure/image in JPG/PNG/EXR
 
 ## Developer note

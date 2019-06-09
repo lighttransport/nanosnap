@@ -4163,9 +4163,9 @@ int rfft_forward_1d_array(const double *input, const int fft_len, const int nsam
 
     double fct = norm_factor;
 
-    printf("npts = %d, norm = %f\n", npts, norm_factor);
-    printf("rstep = %d\n", rstep);
-    printf("nrepeats = %d\n", nrepeats);
+    //printf("npts = %d, norm = %f\n", npts, norm_factor);
+    //printf("rstep = %d\n", rstep);
+    //printf("nrepeats = %d\n", nrepeats);
 
     int nprocessed = 0;
     if (!fail)
@@ -4187,5 +4187,50 @@ int rfft_forward_1d_array(const double *input, const int fft_len, const int nsam
     }
 
     return nrows;
+}
 
+int cfft_backward_1d_array(const double *input, const int ncolumns, const int nrows, const float norm_factor, double *output)
+{
+    if (!input) {
+        return -1;
+    }
+
+    if (!output) {
+        return -1;
+    }
+
+    int npts = ncolumns;
+    cfft_plan plan=NULL;
+
+    int nrepeats = nrows;
+    const double *dptr = input;
+    int fail=0;
+    double fct = norm_factor;
+    //Py_BEGIN_ALLOW_THREADS;
+    //NPY_SIGINT_ON;
+    plan = make_cfft_plan(npts);
+    if (!plan) fail=1;
+
+    double *out_ptr = output;
+
+    if (!fail)
+      for (int i = 0; i < nrepeats; i++) {
+          printf("i = %d(%d), ncols = %d, nrows = %d\n", i, nrepeats, ncolumns, nrows);
+          memcpy(out_ptr, dptr, sizeof(double) * 2 * npts);
+          int res = cfft_backward(plan, out_ptr, fct); // in-place
+          if (res!=0) { fail=1; break; }
+          dptr += npts*2;
+          out_ptr += npts*2;
+      }
+    if (plan) destroy_cfft_plan(plan);
+    //NPY_SIGINT_OFF;
+    //Py_END_ALLOW_THREADS;
+    if (fail) {
+      //Py_XDECREF(data);
+      //return PyErr_NoMemory();
+      return -1;
+    }
+    //return (PyObject *)data;
+
+    return nrepeats;
 }

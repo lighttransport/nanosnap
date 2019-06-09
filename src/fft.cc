@@ -55,13 +55,6 @@ static bool frame_sig(const std::vector<float> &y,
   // y_frames = as_strided(y, shape=(frame_length, n_frames),
   //                       strides=(y.itemsize, hop_length * y.itemsize))
 
-  // y_frames[j][i] == y[i * hop_length + j]
-
-  std::cout << "y.size = " << y.size() << std::endl;
-  std::cout << "frame_sig.n_frames = " << n_frames << std::endl;
-  std::cout << "frame_length = " << frame_length << std::endl;
-  std::cout << "hop_length = " << hop_length << std::endl;
-
   output->resize(n_frames * frame_length);
   for (size_t j = 0; j < frame_length; j++) {
     for (size_t i = 0; i < n_frames; i++) {
@@ -131,12 +124,80 @@ bool rfft(const float *signal, const size_t nframes, const size_t nrows,
   return true;
 }
 
+// 1D ifft
+bool ifft(const std::complex<float> *input, const size_t ncolumns, const size_t nrows,
+          const size_t n, std::vector<std::complex<float>> *output) {
+  if (input == nullptr) {
+    return false;
+  }
+
+  if ((ncolumns < 1) || (nrows < 1)) {
+    return false;
+  }
+
+  size_t output_n = n;
+
+  // to pair of doubles.
+  std::vector<double> dinput;
+  dinput.resize(2 * output_n * nrows);
+
+  // clear with zeros.
+  memset(dinput.data(), 0, sizeof(double) * dinput.size());
+
+  // Create an array of pair of doubles.
+  // Also resize columns
+  for (size_t j = 0; j < nrows; j++) {
+    for (size_t i = 0; i < output_n; i++) {
+      const size_t src_idx = j * ncolumns + i;
+      dinput[2 * (j * output_n + i) + 0] = double(input[src_idx].real());
+      dinput[2 * (j * output_n + i) + 1] = double(input[src_idx].imag());
+    }
+  }
+
+  std::vector<double> dout;  // (real, img), (real, img), ...
+  // 2x is for considering complex-type
+  dout.resize(2 * output_n * nrows);
+  memset(reinterpret_cast<char *>(dout.data()), 0,
+         sizeof(double) * 2 * output_n * nrows);
+
+  float norm_factor = 1.0f / float(n);
+
+  // TODO(LTE): Implement norm = "ortho"
+  // if (normalize) {
+  //   norm_factor = 1.0f / sqrt(n);
+  // }
+
+  (void)norm_factor;
+
+  int m = cfft_backward_1d_array(dinput.data(), int(output_n), int(nrows), norm_factor, dout.data());
+
+  if (m != int(nrows)) {
+    return false;
+  }
+
+  // Cast from double to float.
+  output->resize(output_n * nrows);
+  for (size_t j = 0; j < nrows; j++) {
+    for (size_t i = 0; i < output_n; i++) {
+      (*output)[j * output_n + i] =
+          std::complex<float>(float(dout[2 * (j * output_n + i) + 0]),
+                              float(dout[2 * (j * output_n + i) + 1]));
+    }
+  }
+
+  return true;
+}
+
+
 // librosa.stft(1D input only)
 bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
           const size_t hop_length, const size_t win_length,
           std::vector<std::complex<float>> *output, const bool center) {
-  // TODO(LTE): support pad mode.
-  // Assume pad_mode is 'reflect'
+
+  // NOTE(LTE): librosa's stft implementation uses Fortran order of array.
+  // Need to consider flipping row and columns in appropriate place.
+  //
+  // TODO(LTE): Rewrite stft without transposing shape to avoid confusion.
 
   std::vector<float> y;
 
@@ -169,10 +230,6 @@ bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
     }
   }
 
-  for (size_t i = 0; i < window.size(); i++) {
-    std::cout << "window[" << i << "] = " << window[i] << "\n";
-  }
-
   std::vector<float> y_frames;
   size_t n_rows = 0;
   {
@@ -182,45 +239,126 @@ bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
     }
   }
 
-  // Flip dimension to match numpy(librosa)'s result.
-  // TODO(LTE): Rewrite frame_sig so that we don't flip dimension to avoid confusion.
+  // Flip dimension to match numpy(librosa)'s Fortran order.
 
   size_t frame_length = n_rows;
   size_t nframes = n_fft;
 
-  std::cout << "window.size = [" << window.size() << "\n";
-  std::cout << "nframes = " << nframes << "\n";
-  std::cout << "frame_length = [[" << frame_length << "\n";
-
-  for (size_t i = 0; i < y_frames.size(); i++) {
-    std::cout << "y_frames[" << i << "] = " << y_frames[i] << "\n";
-  }
+  //std::cout << "window.size = [" << window.size() << "\n";
+  //std::cout << "nframes = " << nframes << "\n";
+  //std::cout << "frame_length = [[" << frame_length << "\n";
+  //for (size_t i = 0; i < y_frames.size(); i++) {
+  //  std::cout << "y_frames[" << i << "] = " << y_frames[i] << "\n";
+  //}
 
   std::vector<float> y_modulated(y_frames.size());
 
   // Apply window function.
-  // window.shape = [frame_length][1]
-  // (window * y).shape = [frame_length][nframes] in C++
   for (size_t j = 0; j < nframes; j++) {
     for (size_t i = 0; i < frame_length; i++) {
-      //y_modulated[j * frame_length + i] *= window[j];
-      // transpose
-      y_modulated[j * frame_length + i] = y_frames[i * nframes + j] * window[j];
+      //y_modulated[j * frame_length + i] = y_frames[j * frame_length + i] * window[j];
+
+      // transpose y_modulated
+      y_modulated[i * nframes + j] = y_frames[j * frame_length + i] * window[j];
     }
   }
 
-  for (size_t i = 0; i < y_modulated.size(); i++) {
-    std::cout << "modulated y_frames[" << i << "] = " << y_modulated[i] << "\n";
-  }
+  //for (size_t i = 0; i < y_modulated.size(); i++) {
+  //  std::cout << "modulated y_frames[" << i << "] = " << y_modulated[i] << "\n";
+  //}
 
-  // HACK
+  //std::cout << "nframes = " << nframes << std::endl;
+  //std::cout << "frame_len = " << frame_length << std::endl;
+
+  // transpose frame_len and num_frames
   bool ret = rfft(y_modulated.data(), /* frame len */nframes, /* num frames */frame_length,  /* fft size */nframes, output);
 
-  for (size_t i = 0; i < output->size(); i++) {
-    std::cout << "output[" << i << "] = " << (*output)[i] << std::endl;
-  }
+  //for (size_t i = 0; i < output->size(); i++) {
+  //  std::cout << "output[" << i << "] = " << (*output)[i] << std::endl;
+  //}
 
   return ret;
+}
+
+bool istft(const std::complex<float> *stft, const size_t ncolumns,
+           const size_t nrows, const size_t hop_length, const size_t win_length,
+           std::vector<float> *output, const bool center)
+{
+  size_t n_fft = 2 * (ncolumns -1);
+
+  std::vector<float> _ifft_window;
+  {
+    bool ret = get_window("hann", win_length, &_ifft_window, /* periodic */true);
+    if (!ret) {
+      return false;
+    }
+  }
+
+  // Pad out to match n_fft
+  std::vector<float> ifft_window;
+  {
+    bool ret= pad_center(_ifft_window, n_fft, &ifft_window);
+    if (!ret) {
+      return false;
+    }
+  }
+
+  // TODO(LTE): Implement
+
+  (void)center;
+  (void)stft;
+  (void)nrows;
+  (void)hop_length;
+  (void)output;
+
+/*
+    n_frames = stft_matrix.shape[1]
+    expected_signal_len = n_fft + hop_length * (n_frames - 1)
+    y = np.zeros(expected_signal_len, dtype=dtype)
+
+    for i in range(n_frames):
+        sample = i * hop_length
+        spec = stft_matrix[:, i].flatten()
+        spec = np.concatenate((spec, spec[-2:0:-1].conj()), 0)
+        ytmp = ifft_window * fft.ifft(spec).real
+
+        y[sample:(sample + n_fft)] = y[sample:(sample + n_fft)] + ytmp
+
+    # Normalize by sum of squared window
+    ifft_window_sum = window_sumsquare(window,
+                                       n_frames,
+                                       win_length=win_length,
+                                       n_fft=n_fft,
+                                       hop_length=hop_length,
+                                       dtype=dtype)
+
+
+    approx_nonzero_indices = ifft_window_sum > util.tiny(ifft_window_sum)
+    y[approx_nonzero_indices] /= ifft_window_sum[approx_nonzero_indices]
+
+    if length is None:
+        # If we don't need to control length, just do the usual center trimming
+        # to eliminate padded data
+        if center:
+            y = y[int(n_fft // 2):-int(n_fft // 2)]
+    else:
+        if center:
+            # If we're centering, crop off the first n_fft//2 samples
+            # and then trim/pad to the target length.
+            # We don't trim the end here, so that if the signal is zero-padded
+            # to a longer duration, the decay is smooth by windowing
+            start = int(n_fft // 2)
+        else:
+            # If we're not centering, start at 0 and trim/pad as necessary
+            start = 0
+
+        y = util.fix_length(y[start:], length)
+
+    return y
+
+*/
+
+  return false;
 }
 
 }  // namespace nanosnap
