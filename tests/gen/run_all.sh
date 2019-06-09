@@ -3,6 +3,7 @@ python gen_lifter.py > ../testvector/lifter.inc
 python gen_rfft.py > ../testvector/rfft.inc
 python gen_ifft.py > ../testvector/ifft.inc
 python gen_librosa_stft.py > ../testvector/librosa_stft.inc
+python gen_librosa_istft.py > ../testvector/librosa_istft.inc
 python gen_random_uniform.py > ../testvector/random_uniform.inc
 python gen_random_normal.py > ../testvector/random_normal.inc
 python gen_convolve_full.py > ../testvector/convolve_full.inc

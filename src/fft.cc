@@ -1,3 +1,26 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2019 Light Transport Entertainment, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 #include "nanosnap/fft.h"
 #include "nanosnap/nanosnap.h"
 
@@ -7,8 +30,10 @@
 #include <cstring>
 #include <deque>
 #include <memory>
+#include <limits>
+#include <algorithm>
 
-#include <iostream>  // dbg
+//#include <iostream>  // dbg
 
 namespace nanosnap {
 
@@ -66,6 +91,58 @@ static bool frame_sig(const std::vector<float> &y,
 
   return true;
 }
+
+// librosa.window_sumsquare
+// 'hann' window only. norm = 'None'
+bool hann_window_sumsquare(
+  const size_t n_frames, const size_t hop_length, const size_t win_length, const size_t n_fft,
+  std::vector<float> *output)
+{
+  const size_t n = n_fft + hop_length * (n_frames - 1);
+  std::vector<float> x(n, 0.0f);
+
+  //  Compute the squared window at the desired length
+  std::vector<float> win_sq;
+  {
+    std::vector<float> _win_sq;
+    bool ret = get_window("hann", win_length, &_win_sq);
+    if (!ret) {
+      return false;
+    }
+
+    // abs(x)^2
+    for (size_t i = 0; i < _win_sq.size(); i++) {
+      _win_sq[i] = _win_sq[i] * _win_sq[i];
+    }
+
+    // pad_center
+    ret = pad_center(_win_sq, n_fft, &win_sq);
+    if (!ret) {
+      return false;
+    }
+  }
+
+  // Fill the envelope
+  // __window_ss_fill(x, win_sq, n_frames, hop_length)
+  {
+    for (size_t i = 0; i < n_frames; i++) {
+      size_t sample = i * hop_length;
+      size_t end_idx = (std::min)(x.size(), sample + n_fft);
+
+      // x[sample:min(n, sample + n_fft)] += win_sq[:max(0, min(n_fft, n - sample))]
+      for (size_t k = sample; k < end_idx; k++) {
+        // clamp for safety
+        size_t win_idx = (std::min)(n_fft - 1, k - sample);
+        x[k] += win_sq[win_idx];
+      }
+    }
+  }
+
+  (*output) = x; // copy
+
+  return true;
+}
+
 
 }  // namespace
 
@@ -286,6 +363,9 @@ bool istft(const std::complex<float> *stft, const size_t ncolumns,
 {
   size_t n_fft = 2 * (ncolumns -1);
 
+  //std::cout << "win_length = " << win_length << std::endl;
+  //std::cout << "n_fft = " << n_fft << std::endl;
+
   std::vector<float> _ifft_window;
   {
     bool ret = get_window("hann", win_length, &_ifft_window, /* periodic */true);
@@ -297,7 +377,7 @@ bool istft(const std::complex<float> *stft, const size_t ncolumns,
   // Pad out to match n_fft
   std::vector<float> ifft_window;
   {
-    bool ret= pad_center(_ifft_window, n_fft, &ifft_window);
+    bool ret = pad_center(_ifft_window, n_fft, &ifft_window);
     if (!ret) {
       return false;
     }
@@ -305,17 +385,13 @@ bool istft(const std::complex<float> *stft, const size_t ncolumns,
 
   // TODO(LTE): Implement
 
-  (void)center;
-  (void)stft;
-  (void)nrows;
-  (void)hop_length;
-  (void)output;
+  size_t n_frames = nrows;
+  size_t expected_signal_len = n_fft + hop_length * (n_frames - 1);
 
-/*
-    n_frames = stft_matrix.shape[1]
-    expected_signal_len = n_fft + hop_length * (n_frames - 1)
-    y = np.zeros(expected_signal_len, dtype=dtype)
+  // y = np.zeros(expected_signal_len, dtype=dtype)
+  std::vector<float> y(expected_signal_len, 0.0f);
 
+  /*
     for i in range(n_frames):
         sample = i * hop_length
         spec = stft_matrix[:, i].flatten()
@@ -323,42 +399,95 @@ bool istft(const std::complex<float> *stft, const size_t ncolumns,
         ytmp = ifft_window * fft.ifft(spec).real
 
         y[sample:(sample + n_fft)] = y[sample:(sample + n_fft)] + ytmp
+  */
+  for (size_t i = 0; i < n_frames; i++) {
+    size_t sample = i * hop_length;
 
-    # Normalize by sum of squared window
-    ifft_window_sum = window_sumsquare(window,
-                                       n_frames,
-                                       win_length=win_length,
-                                       n_fft=n_fft,
-                                       hop_length=hop_length,
-                                       dtype=dtype)
+    // spec = stft_matrix[:, i].flatten()
+    // => extract each row
+
+    // spec = np.concatenate((spec, spec[-2:0:-1].conj()), 0)
+    // => reflect with conjugate.
+    // e.g. spec [a, b, c, d, e]
+    //
+    // np.concatenate((spec, spec[-2:0:-1].conj()), 0)
+    //
+    // => [a, b, c, d, e, d.conj(), c.conj(), b.conj()]
+
+    std::vector<std::complex<float>> spec(n_fft);
+
+    // spec = stft_matrix[:, i].flatten()
+    for (size_t k = 0; k < ncolumns; k++) {
+      spec[k] = stft[i * ncolumns + k];
+    }
+
+    // concat: spec[-2:0:-1].conj
+    for (size_t k = 0; k < ncolumns - 2; k++) {
+      spec[ncolumns + k] = std::conj(spec[ncolumns - 2 - k]);
+    }
+
+    // ytmp = ifft_window * fft.ifft(spec).real
+
+    std::vector<float> ytemp(n_fft);
+    std::vector<std::complex<float>> ifft_spec;
+
+    bool ret = ifft(spec.data(), n_fft, /* 1D */1, /* n */n_fft, &ifft_spec);
+
+    if (!ret) {
+      return false;
+    }
 
 
-    approx_nonzero_indices = ifft_window_sum > util.tiny(ifft_window_sum)
-    y[approx_nonzero_indices] /= ifft_window_sum[approx_nonzero_indices]
+    for (size_t k = 0; k < n_fft; k++) {
+      ytemp[k] = ifft_window[k] * ifft_spec[k].real();
+    }
 
-    if length is None:
-        # If we don't need to control length, just do the usual center trimming
-        # to eliminate padded data
-        if center:
-            y = y[int(n_fft // 2):-int(n_fft // 2)]
-    else:
-        if center:
-            # If we're centering, crop off the first n_fft//2 samples
-            # and then trim/pad to the target length.
-            # We don't trim the end here, so that if the signal is zero-padded
-            # to a longer duration, the decay is smooth by windowing
-            start = int(n_fft // 2)
-        else:
-            # If we're not centering, start at 0 and trim/pad as necessary
-            start = 0
+    // y[sample:(sample + n_fft)] = y[sample:(sample + n_fft)] + ytmp
+    for (size_t k = 0; k < n_fft; k++) {
+      y[sample + k] += ytemp[k];
+    }
+  }
 
-        y = util.fix_length(y[start:], length)
+  // Normalize by sum of squared window
+  std::vector<float> ifft_window_sum;
+  {
+    bool ret = hann_window_sumsquare(n_frames, hop_length, win_length, n_fft, &ifft_window_sum);
+    if (!ret) {
+      return false;
+    }
+  }
 
-    return y
+  // approx_nonzero_indices = ifft_window_sum > util.tiny(ifft_window_sum)
+  // y[approx_nonzero_indices] /= ifft_window_sum[approx_nonzero_indices]
+  assert(y.size() == ifft_window_sum.size());
 
-*/
+  for (size_t i = 0; i < y.size(); i++) {
+    if (y[i] > std::numeric_limits<float>::min()) {
+      y[i] /= ifft_window_sum[i];
+    }
+  }
 
-  return false;
+  //  if length is None:
+  //      # If we don't need to control length, just do the usual center trimming
+  //      # to eliminate padded data
+  //      if center:
+  //          y = y[int(n_fft // 2):-int(n_fft // 2)]
+
+  // TODO(LTE): Support `length` parameter.
+  if (center) {
+    // eliminate padded data.
+    const size_t s_idx = n_fft / 2;
+    const size_t e_idx = size_t(int64_t(y.size()) - (int64_t(n_fft) / 2));
+
+    output->resize(e_idx - s_idx);
+    for (size_t i = s_idx; i < e_idx; i++) {
+      (*output)[i - s_idx] = y[i];
+    }
+  } else {
+    (*output) = y;
+  }
+
+  return true;
 }
 
 }  // namespace nanosnap
