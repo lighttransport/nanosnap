@@ -57,7 +57,9 @@ namespace nanosnap {
 /// @return true upon success.
 ///
 
-bool pad_reflect(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output);
+bool pad_reflect(const float *input, const size_t n,
+                 const size_t pad_width_before, const size_t pad_width_after,
+                 std::vector<float> *output);
 
 ///
 /// @brief pad 1D array with border mode `constant`
@@ -76,7 +78,10 @@ bool pad_reflect(const float *input, const size_t n, const size_t pad_width_befo
 /// @return true upon success.
 ///
 
-bool pad_constant(const float *input, const size_t n, const size_t pad_width_before, const size_t pad_width_after, std::vector<float> *output, const float pad_constant_value = 0.0f);
+bool pad_constant(const float *input, const size_t n,
+                  const size_t pad_width_before, const size_t pad_width_after,
+                  std::vector<float> *output,
+                  const float pad_constant_value = 0.0f);
 
 ///
 /// @brief Create an array with the given shape and stride
@@ -84,8 +89,8 @@ bool pad_constant(const float *input, const size_t n, const size_t pad_width_bef
 /// numpy.lib.stride_tricks.as_strided()
 /// https://docs.scipy.org/doc/numpy/reference/generated/numpy.lib.stride_tricks.as_strided.html
 ///
-/// In contrast to numpy's `as_strided`. NanoSNAP implementation creates new array, not a view.
-/// Input must be 1D and output shape must be up to 2D.
+/// In contrast to numpy's `as_strided`. NanoSNAP implementation creates new
+/// array, not a view. Input must be 1D and output shape must be up to 2D.
 ///
 /// @param[in] x Input 1D array
 /// @param[in] n The number of elements in `x`
@@ -95,8 +100,8 @@ bool pad_constant(const float *input, const size_t n, const size_t pad_width_bef
 ///
 /// @return true upon success.
 ///
-bool reshape_with_strides(const float *x, const size_t n, const size_t shape[2], const size_t strides[2],
-                          std::vector<float> *output);
+bool reshape_with_strides(const float *x, const size_t n, const size_t shape[2],
+                          const size_t strides[2], std::vector<float> *output);
 
 ///
 /// @brief 1D Median filter
@@ -112,9 +117,9 @@ bool reshape_with_strides(const float *x, const size_t n, const size_t shape[2],
 ///
 /// @return false when Window size is not odd number.
 ///
-bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y,
-              bool include_nan = false, bool padding = true);
-
+bool medfilt1(const float *x, const size_t n, const int k,
+              std::vector<float> *y, bool include_nan = false,
+              bool padding = true);
 
 ///
 /// @brief Filter data along one-dimension with an IIR or FIR filter.
@@ -126,7 +131,8 @@ bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y
 ///
 /// @param[in] b The numerator coefficient vector in a 1-D sequence.
 /// @param[in] nb The length of `a`.
-/// @param[in] a The denominator coefficient vector in a 1-D sequence. If a[0] is not 1, then both a and b are normalized by a[0].
+/// @param[in] a The denominator coefficient vector in a 1-D sequence. If a[0]
+/// is not 1, then both a and b are normalized by a[0].
 /// @param[in] na The length of `b`.
 /// @param[in] x Input array
 /// @param[in] nx The number of columns of `x`.
@@ -134,8 +140,8 @@ bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y
 ///
 /// @return true upon success.
 ///
-bool lfilter(const float *b, const size_t nb, const float *a, const size_t na, const float *x, const size_t nx, const size_t mx);
-
+bool lfilter(const float *b, const size_t nb, const float *a, const size_t na,
+             const float *x, const size_t nx, const size_t mx);
 
 ///
 /// @brief Returns the discrete, linear convolution of two 1D sequences.
@@ -165,11 +171,11 @@ bool convolve(const float *a, const size_t n, const float *v, const size_t m,
 /// https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.windows.hann.html#scipy.signal.windows.hann
 ///
 /// @param[in] m Number of sample points in output window
-/// @param[in] symmetric Optional. true to create symmetric window. false to create periodic window. Default true.
+/// @param[in] symmetric Optional. true to create symmetric window. false to
+/// create periodic window. Default true.
 /// @return window function.
 ///
 std::vector<float> window_hann(const size_t m, const bool symmetric = true);
-
 
 ///
 /// @brief Get windowing function
@@ -177,13 +183,17 @@ std::vector<float> window_hann(const size_t m, const bool symmetric = true);
 /// scipy.signal.get_window
 /// https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.get_window.html
 ///
-/// @param[in] window_type Name of Window function type. Currently only 'hann' is implemented.
+/// @param[in] window_type Name of Window function type. Currently only 'hann'
+/// is implemented.
 /// @param[in] nx The number of sampled in the window.
 /// @param[out] output Samples of windowing function.
-/// @param[in] periodic Optional. false to create symmertic window. Corresponds to `fftbins` in `scipy.signal.get_window` parameter. Default true.
-/// @return true upon succes. False when error(e.g. window_type is invalid or unimplemented)
+/// @param[in] periodic Optional. false to create symmertic window. Corresponds
+/// to `fftbins` in `scipy.signal.get_window` parameter. Default true.
+/// @return true upon succes. False when error(e.g. window_type is invalid or
+/// unimplemented)
 ///
-bool get_window(const std::string &window_type, const size_t nx, std::vector<float> *output, const bool periodic = true);
+bool get_window(const std::string &window_type, const size_t nx,
+                std::vector<float> *output, const bool periodic = true);
 
 ///
 /// Generate sequence of uniformly random values of `n` elements.
@@ -548,6 +558,79 @@ bool loadtxt(const std::string &filename, std::vector<float> *values, int *n,
 ///
 bool savetxt(const std::string &filename, const float *values, const int n,
              const int m, std::string *err);
+
+///
+/// @brief resize image.
+///
+/// Resize 32bit float image with bilinear interpolation.
+/// Pixel data in memory are LLLL...(gray scale), RGBRGBRGB...(RGB) or
+/// RGBARGBARGBA...(RGBA) (This means HWC format in ML field).
+///
+/// Behavior of interpolation matches with cv2.resize.
+/// (TensorFlow resize_image v2 or PyTorch 0.4+)
+///
+/// Assume image is in linear color space.
+/// Up to 2GB of image data.
+///
+/// @param[in] src Input source image.
+/// @param[in] src_width Width of source image in pixels.
+/// @param[in] src_width_stride Width stride of source image in pixels. `src_width_stride` must
+/// be greater or equal to `width`. Map to `src_width` when set to `0`
+/// @param[in] src_height Height of source image in pixels.
+/// @param[in] channels The number of pixel channels. 1(grayscale), 3(RGB) or
+/// @param[out] dst Output resized image.
+/// @param[out] dst_width Width of source image in pixels.
+/// @param[out] dst_width_stride Width stride of source image in pixels. `src_width_stride` must
+/// be greater or equal to `width`. Map to `src_width` when set to `0`
+/// @param[out] dst_height Height of source image in pixels.
+/// 4(RGBA) are supported.
+/// @return true upon success.
+///
+bool resize_bilinear(const float *src, const int32_t src_width,
+                  const int32_t src_width_stride, const int32_t src_height,
+                  const int32_t channels,
+                  const int32_t dst_width,
+                  const int32_t dst_width_stride, const int32_t dst_height,
+                  std::vector<float> *dst);
+
+///
+/// @brief Load LDR image from a file.
+///
+/// Load LDR(e.g. JPG/PNG) image and convert to 32bit float image.
+/// [0, 255] are mapped to [0.0, 1.0]
+///
+/// Image data are stored in memory with HWC format(e.g. RGBRGBRGB...).
+///
+/// sRGB to Linear conversion is applied.
+///
+/// @param[in] filename Filename.
+/// @param[out] image Image data.
+/// @param[out] width Width of loaded image.
+/// @param[out] height Height of loaded image.
+/// @param[out] channels The number of pixel channels in loaded image(e.g. 3 for RGB)
+/// @param[in] srgb_to_linear Optional. Apply sRGB to Linear conversion. Default true. false to load image as is.
+///
+bool imread(const std::string &filename, std::vector<float> *image, int32_t *width, int32_t *height, int32_t *channels, const bool srgb_to_linear = true);
+
+///
+/// @brief Save image to a file with LDR format.
+///
+/// Assume input image is in linear space.
+/// Pixel value [0.0, 1.0] are mapped to [0, 255].
+/// Linear to sRGB conversion is applied.
+///
+/// Image data are stored in memory with HWC format(e.g. RGBRGBRGB...).
+///
+/// TODO(LTE): Support width stride.
+///
+/// @param[in] filename Filename.
+/// @param[in] image Image data.
+/// @param[in] width Width of loaded image.
+/// @param[in] height Height of loaded image.
+/// @param[in] channels The number of pixel channels in loaded image(e.g. 3 for RGB)
+/// @param[in] linear_to_srgb Optional. Apply Linear to sRGB conversion. Default true. false to load image in linear space.
+///
+bool imsave(const std::string &filename, std::vector<float> &image, const int32_t width, const int32_t height, const int32_t channels, const bool linear_to_srgb = true);
 
 }  // namespace nanosnap
 

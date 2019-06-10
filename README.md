@@ -5,9 +5,9 @@ NanoSNAP depends only on C++11 STL.
 
 ## Usage
 
-* For running TTS(Text-to-speech) and ASR(Automatic Speech Recognition) program on C++ application and Embedded device.
+* For running TTS(Text-to-speech) and ASR(Automatic Speech Recognition) on C++ Embedded device.
 * Image processing with neural netowork inference on C++ and Embedded device.
-* Implement audio and speech feature(e.g. `rfft`, `mfcc`) on your C++ machine learning library.
+* Implement audio and speech feature(e.g. using `rfft`, `mfcc` `stft`, `istft`) on your C++ machine learning library.
 
 ## Install and integration
 
@@ -179,12 +179,21 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 | `stft`                 | Short Term Fourier Transform | `librosa.stft`                      |
 | `istft`                | Inverse STFT                 | `librosa.istft`                     |
 
+### Image
+
+| NanoSNAP               | Description                  | Python equivalent                   |
+| ---------------------- | ---------------------------- | ----------------------------------- |
+| `resize_bilinear`      | Resize image with bilinear   | `cv2.resize_image`                  |
+| `imread`               | Load LDR image               | `cv2.imread`                        |
+| `imsave`               | Save image as LDR format     | `cv2.imsave`                        |
+
 ## limited support
 
 * get_window : 'hann' only. `scipy.signal.get_window` equivalent.
 
 ## TODO
 
+* [ ] Image reszier.
 * [ ] Better error handling(report error message)
 * [ ] Multithreading using C++11 `thread`.
   * [ ] Use `StackVector` as much as possible.
@@ -218,3 +227,5 @@ NanoSNAP is licensed under MIT license.
 * python_speech_features : The MIT License (MIT). Copyright (c) 2013 James Lyons. https://github.com/jameslyons/python_speech_features
 * pocketfft : FFT library used in numpy. Copyright (C) 2004-2018 Max-Planck-Society. 3-clause BSD-tyle license. https://gitlab.mpcdf.mpg.de/mtr/pocketfft
 * c_speech_features : Copyright (c) 2017 Chris Lord. MIT license. https://github.com/Cwiiis/c_speech_features
+* STB image : Public domain. https://github.com/nothings/stb
+* sRGB transform : Copyright (c) 2017 Project Nayuki. (MIT License) https://www.nayuki.io/page/srgb-transform-library
