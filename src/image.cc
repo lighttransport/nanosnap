@@ -20,6 +20,7 @@
 #include "nanosnap/nanosnap.h"
 
 #include <algorithm>
+#include <cctype>		// std::tolower
 
 namespace nanosnap {
 

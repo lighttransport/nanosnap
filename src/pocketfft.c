@@ -20,6 +20,14 @@
 #include <stdlib.h>
 #include <stdio.h> // dbg
 
+#ifdef _MSC_VER
+// Suppress warnings on MSVC
+#pragma warning( disable : 4244 )
+#pragma warning( disable : 4305 )
+#pragma warning( disable : 4204 )
+#pragma warning( disable : 4267 )
+#endif
+
 //#include "npy_config.h"
 //#define restrict NPY_RESTRICT
 
@@ -3162,7 +3170,6 @@ static size_t rfftp_twsize(rfftp_plan plan)
     l1*=ip;
     }
   return twsize;
-  return 0;
   }
 
 static size_t rfftp_twsize_f(rfftp_plan_f plan)
@@ -3176,7 +3183,6 @@ static size_t rfftp_twsize_f(rfftp_plan_f plan)
     l1*=ip;
     }
   return twsize;
-  return 0;
   }
 
 
