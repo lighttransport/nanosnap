@@ -1,3 +1,26 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2019 Light Transport Entertainment, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 #include "nanosnap/nanosnap.h"
 
 #include "stack_vector.h"
@@ -11,6 +34,8 @@
 namespace nanosnap {
 
 namespace {
+
+constexpr float kPI = 3.141592f;
 
 // Find median value.
 // `a` will be modified.
@@ -48,8 +73,50 @@ static inline float find_median(const size_t n, float *a) {
 
 }  // namespace
 
-bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y,
-              bool include_nan, bool padding) {
+std::vector<float> window_hann(const size_t m, const bool symmetric) {
+  std::vector<float> win;
+
+  if (m == 0) {
+    // return empty array
+    return win;
+  }
+
+  if (m == 1) {
+    win.push_back(1.0f);
+    return win;
+  }
+
+  size_t M = m;
+  if (!symmetric) {
+    // extend window size by 1 sample.
+    M = M + 1;
+  }
+
+  // When !symmetric, scipy implementation(general_cosine) truncates window by 1
+  // sample. so we don't need to resize with `M`.
+  win.resize(m);
+  for (size_t n = 0; n < m; n++) {
+    // Keep in mind that denominator uses `M`
+    float w = 0.5f - 0.5f * std::cos((2.0f * kPI * n) / float(M - 1));
+    win[n] = w;
+  }
+
+  return win;
+}
+
+bool get_window(const std::string &window_type, const size_t nx,
+                std::vector<float> *output, const bool periodic) {
+
+  if (window_type.compare("hann") == 0) {
+    (*output) = window_hann(nx, !periodic);
+    return true;
+  }
+
+  return false;
+}
+
+bool medfilt1(const float *x, const size_t n, const int k,
+              std::vector<float> *y, bool include_nan, bool padding) {
   if ((k % 2) != 1) {
     // window size must be odd.
     return false;
@@ -93,7 +160,6 @@ bool medfilt1(const float *x, const size_t n, const int k, std::vector<float> *y
 
   return true;
 }
-
 
 bool convolve(const float *_a, const size_t _n, const float *_v,
               const size_t _m, std::vector<float> *output, const int mode) {
@@ -275,8 +341,7 @@ bool convolve(const float *_a, const size_t _n, const float *_v,
 }
 
 bool lfilter(const float *b, const size_t nb, const float *a, const size_t na,
-  const float *x, const size_t nx, const size_t mx)
-{
+             const float *x, const size_t nx, const size_t mx) {
   std::vector<float> b_normalized(nb);
   memcpy(b_normalized.data(), b, sizeof(float) * nb);
 
@@ -288,28 +353,27 @@ bool lfilter(const float *b, const size_t nb, const float *a, const size_t na,
   // TODO(LTE): Implement
   (void)na;
 
-/*
-        ind = out_full.ndim * [slice(None)]
-        if zi is not None:
-            ind[axis] = slice(zi.shape[axis])
-            out_full[ind] += zi
+  /*
+          ind = out_full.ndim * [slice(None)]
+          if zi is not None:
+              ind[axis] = slice(zi.shape[axis])
+              out_full[ind] += zi
 
-        ind[axis] = slice(out_full.shape[axis] - len(b) + 1)
-out = out_full[ind]
-*/
+          ind[axis] = slice(out_full.shape[axis] - len(b) + 1)
+  out = out_full[ind]
+  */
 
   // out_full = np.apply_along_axis(lambda y: np.convolve(b, y), axis, x)
   // Apply convolve for each row(axis = -1 behavior in scipy.signal.lfilter).
   for (size_t j = 0; j < mx; j++) {
     std::vector<float> output;
-    bool ret = convolve(b, nb, &x[j * nx], nx, &output, /* mode */0);
+    bool ret = convolve(b, nb, &x[j * nx], nx, &output, /* mode */ 0);
     if (!ret) {
       return false;
     }
   }
 
   return false;
-
 }
 
-}  // namespace nanosna
+}  // namespace nanosnap

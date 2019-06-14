@@ -7,6 +7,9 @@ import numpy
 def print_c_array(arr):
     c_arr = []
 
+    if numpy.isfortran(arr):
+        arr = numpy.transpose(arr)
+
     if len(arr.shape) == 1:
         for i in arr:
             if isinstance(i, complex) or isinstance(i, numpy.complex) or isinstance(i, numpy.complex64):
