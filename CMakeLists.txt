@@ -101,4 +101,27 @@ if (NANOSNAP_BUILD_TESTS)
     target_include_directories(test_nanosnap PRIVATE ${PROJECT_SOURCE_DIR}/third_party/doctest)
     target_link_libraries(test_nanosnap nanosnap)
     add_sanitizers(test_nanosnap)
+
+    # [VisualStudio]
+    if (WIN32)
+	# Set `test_nanosnap` as a startup project for VS IDE.
+        if (CMAKE_VERSION VERSION_GREATER 3.6.0)
+	    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT test_nanosnap)
+	endif ()
+
+	# For easier debugging in VS IDE.
+	if (CMAKE_VERSION VERSION_GREATER 3.8.0)
+            set_target_properties(test_nanosnap PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	endif ()
+
+    endif()
+else()
+    # [VisualStudio]
+    if (WIN32)
+	# Set `nanosnap` as a startup project for VS IDE.
+        if (CMAKE_VERSION VERSION_GREATER 3.6.0)
+	    set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT nanosnap)
+	endif ()
+    endif()
 endif()
+
