@@ -193,7 +193,6 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ## TODO
 
-* [ ] Image reszier.
 * [ ] Better error handling(report error message)
 * [ ] Multithreading using C++11 `thread`.
   * [ ] Use `StackVector` as much as possible.
@@ -202,7 +201,7 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 * FFT
   * [ ] Implement more FFT functions defined in `scipy.fft`.
   * [ ] 2D FFT
-  * [ ] Replace pocketfft with our own C++11 FFT routuine.
+  * [ ] Replace pocketfft with our own C++11 FFT routuine or muFFT https://github.com/Themaister/muFFT.
 * [ ] Port more functions in `python_speech_features`
 * [ ] Implement more speech features implemented in sox, librosa, etc.
 * [ ] Plot and save figure/image in JPG/PNG/EXR
