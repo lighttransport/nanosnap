@@ -174,10 +174,11 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 
 ### Librosa
 
-| NanoSNAP               | Description                  | Python equivalent                   |
-| ---------------------- | ---------------------------- | ----------------------------------- |
-| `stft`                 | Short Term Fourier Transform | `librosa.stft`                      |
-| `istft`                | Inverse STFT                 | `librosa.istft`                     |
+| NanoSNAP               | Description                                                            | Python equivalent                   |
+| ---------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| `stft`                 | Short Term Fourier Transform                                           | `librosa.stft`                      |
+| `istft`                | Inverse STFT                                                           | `librosa.istft`                     |
+| `mel`                  | Create a Filterbank matrix to combine FFT bins into Mel-frequency bins | `librosa.filters.mel`                     |
 
 ### Image
 
@@ -202,7 +203,7 @@ void rfft(const float *inout, size_t nframes, size_t nrows, ...);
 * FFT
   * [ ] Implement more FFT functions defined in `scipy.fft`.
   * [ ] 2D FFT
-  * [ ] Replace pocketfft with our own C++11 FFT routuine.
+  * [ ] Replace pocketfft with muFFT https://github.com/Themaister/muFFT or our own C++11 FFT routuine.
 * [ ] Port more functions in `python_speech_features`
 * [ ] Implement more speech features implemented in sox, librosa, etc.
 * [ ] Plot and save figure/image in JPG/PNG/EXR

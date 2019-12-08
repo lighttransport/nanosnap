@@ -59,6 +59,7 @@ add_library(nanosnap STATIC
     ${PROJECT_SOURCE_DIR}/src/rng.cc
     ${PROJECT_SOURCE_DIR}/src/text-load-save.cc
     ${PROJECT_SOURCE_DIR}/src/image.cc
+    ${PROJECT_SOURCE_DIR}/src/mel.cc
     ${PROJECT_SOURCE_DIR}/src/pocketfft.c
 )
 add_sanitizers(nanosnap)
@@ -97,6 +98,7 @@ if (NANOSNAP_BUILD_TESTS)
         ${PROJECT_SOURCE_DIR}/tests/test_convolve.cc
         ${PROJECT_SOURCE_DIR}/tests/test_librosa_stft.cc
         ${PROJECT_SOURCE_DIR}/tests/test_librosa_istft.cc
+        ${PROJECT_SOURCE_DIR}/tests/test_librosa_filters_mel.cc
         ${PROJECT_SOURCE_DIR}/tests/test_signal_get_window_hann.cc
         # it looks numpy.random uses slightly different configuration of Mersenne Twistter
         # and does not produce same result with std::mt19937. Disable random test for a while.

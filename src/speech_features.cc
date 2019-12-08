@@ -42,29 +42,6 @@ namespace {
 constexpr float kPI = 3.141592f;
 
 #if 0
-template <typename T>
-inline T safe_div(const T a, const T b) {
-  if (std::fabs(b) < std::numeric_limits<T>::epsilon()) {
-    return static_cast<T>(0.0);
-  } else {
-    return a / b;
-  }
-}
-
-// numpy.linspace in C++
-static void linspace(const float start, const float stop,
-                     std::vector<float> *out, const size_t num = 50,
-                     const bool end_point = true) {
-  out->resize(size_t(num));
-
-  int denom = end_point ? (int(num) - 1) : int(num);
-
-  float step = safe_div(stop - start, float(denom));
-
-  for (size_t i = 0; i < num; i++) {
-    (*out)[i] = i * step;
-  }
-}
 
 // samplerate : [Hz]
 // winlen : [s]

@@ -513,12 +513,12 @@ int64_t ssc(const float *signal, const size_t sig_len, const int samplerate,
 ///    of the FFT buffer which is neutral in terms of frequency domain
 ///    conversion.
 ///
-/// @param[in] samplerate The sample rate of the signal we are working with, in
+/// @param[in] sample_rate The sample rate of the signal we are working with, in
 /// Hz.
 /// @param[in] winlen The length of the analysis window in seconds.
 ///
-inline int calculate_nfft(const float samplerate, const float winlen) {
-  const float window_length_samples = winlen * samplerate;
+inline int calculate_nfft(const float sample_rate, const float winlen) {
+  const float window_length_samples = winlen * sample_rate;
 
   int nfft = 1;
 
@@ -528,6 +528,30 @@ inline int calculate_nfft(const float samplerate, const float winlen) {
 
   return nfft;
 }
+
+///
+/// @brief Create a Filterbank matrix to combine FFT bins into Mel-frequency
+/// bins
+///
+/// Implements `librosa.filters.mel`
+///
+/// @param[in] sample_rate Sampling rate of input signal.
+/// @param[in] n_fft Number of FFT components.
+/// @param[out] M Mel transform matrix(shape = [n_mels][1 + nfft/2]).
+/// @param[in] n_mel Number of Mel bands to generate(default = 128).
+/// @param[in] fmin lowest frequency([Hz]). default = 0.0
+/// @param[in] fmax highest frequency(([Hz]). -1.0 = use `sample_rate / 2`.
+/// @param[in] htk use HTK formula instead of Slaney(default false)`.
+/// @param[in] norm if true, divide the triangular mel weights by the width of
+/// the mel band (area normalization). Otherwise, leave all the triangles aiming
+/// for a peak value of 1.0(default true)`.
+///
+/// @return true upon success. Return false when error.
+///
+bool mel_filter(const float sample_rate, const int n_fft, std::vector<float> *M,
+                const int n_mel = 128, const float fmin = 0.0f,
+                const float fmax = -1.0f, const bool htk = false,
+                const bool norm = true);
 
 ///
 /// @brief Load 1D or 2D array data in ASCII format.
@@ -574,24 +598,25 @@ bool savetxt(const std::string &filename, const float *values, const int n,
 ///
 /// @param[in] src Input source image.
 /// @param[in] src_width Width of source image in pixels.
-/// @param[in] src_width_stride Width stride of source image in pixels. `src_width_stride` must
-/// be greater or equal to `width`. Map to `src_width` when set to `0`
+/// @param[in] src_width_stride Width stride of source image in pixels.
+/// `src_width_stride` must be greater or equal to `width`. Map to `src_width`
+/// when set to `0`
 /// @param[in] src_height Height of source image in pixels.
 /// @param[in] channels The number of pixel channels. 1(grayscale), 3(RGB) or
 /// @param[out] dst Output resized image.
 /// @param[out] dst_width Width of source image in pixels.
-/// @param[out] dst_width_stride Width stride of source image in pixels. `src_width_stride` must
-/// be greater or equal to `width`. Map to `src_width` when set to `0`
+/// @param[out] dst_width_stride Width stride of source image in pixels.
+/// `src_width_stride` must be greater or equal to `width`. Map to `src_width`
+/// when set to `0`
 /// @param[out] dst_height Height of source image in pixels.
 /// 4(RGBA) are supported.
 /// @return true upon success.
 ///
 bool resize_bilinear(const float *src, const int32_t src_width,
-                  const int32_t src_width_stride, const int32_t src_height,
-                  const int32_t channels,
-                  const int32_t dst_width,
-                  const int32_t dst_width_stride, const int32_t dst_height,
-                  std::vector<float> *dst);
+                     const int32_t src_width_stride, const int32_t src_height,
+                     const int32_t channels, const int32_t dst_width,
+                     const int32_t dst_width_stride, const int32_t dst_height,
+                     std::vector<float> *dst);
 
 ///
 /// @brief Load LDR image from a file.
@@ -607,10 +632,14 @@ bool resize_bilinear(const float *src, const int32_t src_width,
 /// @param[out] image Image data.
 /// @param[out] width Width of loaded image.
 /// @param[out] height Height of loaded image.
-/// @param[out] channels The number of pixel channels in loaded image(e.g. 3 for RGB)
-/// @param[in] srgb_to_linear Optional. Apply sRGB to Linear conversion. Default true. false to load image as is.
+/// @param[out] channels The number of pixel channels in loaded image(e.g. 3 for
+/// RGB)
+/// @param[in] srgb_to_linear Optional. Apply sRGB to Linear conversion. Default
+/// true. false to load image as is.
 ///
-bool imread(const std::string &filename, std::vector<float> *image, int32_t *width, int32_t *height, int32_t *channels, const bool srgb_to_linear = true);
+bool imread(const std::string &filename, std::vector<float> *image,
+            int32_t *width, int32_t *height, int32_t *channels,
+            const bool srgb_to_linear = true);
 
 ///
 /// @brief Save image to a file with LDR format.
@@ -627,10 +656,14 @@ bool imread(const std::string &filename, std::vector<float> *image, int32_t *wid
 /// @param[in] image Image data.
 /// @param[in] width Width of loaded image.
 /// @param[in] height Height of loaded image.
-/// @param[in] channels The number of pixel channels in loaded image(e.g. 3 for RGB)
-/// @param[in] linear_to_srgb Optional. Apply Linear to sRGB conversion. Default true. false to load image in linear space.
+/// @param[in] channels The number of pixel channels in loaded image(e.g. 3 for
+/// RGB)
+/// @param[in] linear_to_srgb Optional. Apply Linear to sRGB conversion. Default
+/// true. false to load image in linear space.
 ///
-bool imsave(const std::string &filename, std::vector<float> &image, const int32_t width, const int32_t height, const int32_t channels, const bool linear_to_srgb = true);
+bool imsave(const std::string &filename, std::vector<float> &image,
+            const int32_t width, const int32_t height, const int32_t channels,
+            const bool linear_to_srgb = true);
 
 }  // namespace nanosnap
 
