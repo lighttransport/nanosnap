@@ -84,13 +84,13 @@ std::vector<float> proc(int n);
 
 All API does not contain its internal state.
 
-### Multithreading
+#### Multithreading
 
-NanoSNAP API does not ensure MT-safe.
+NanoSNAP API is re-entrant as it does not have any internal state, so it should be safe to use in multi-threading program unless input/output memory address does not overlap between threads.
 
 ### CMake option for developers
 
-* `-DSANITIZE_ADDRESS=On` : Enable ASan.
+* `-DSANITIZE_ADDRESS=On` : Enable Address Sanitizer(for developer).
 
 ## Data layout of array
 
