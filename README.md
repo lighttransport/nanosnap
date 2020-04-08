@@ -27,6 +27,14 @@ Simply copy `include` and `src` folder to your platform.
 * [ ] Raspberry Pi(not tested yet, but should work)
 * [ ] RISC-V(not tested yet, but should work)
 
+## Setup(can be skipped if you don't build tests)
+
+If you want to build tests(building tests are enabled by default), you need to checkout submodules.
+
+```
+$ git submodule update --init --recursive --depth 1
+```
+
 ## Build
 
 ```

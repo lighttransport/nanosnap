@@ -5,13 +5,13 @@ cmake_minimum_required(VERSION 3.5.1)
 # ----------------------------------- Options ----------------------------------
 # ------------------------------------------------------------------------------
 option(NANOSNAP_BUILD_EXAMPLES "Build NanoSNAP example codes" ON)
-option(NANOSNAP_BUILD_TESTS "Build NanoSNAP test codes" ON)
+option(NANOSNAP_BUILD_TESTS "Build NanoSNAP test codes" OFF)
 message(STATUS "NanoSNAP: Build examples: ${NANOSNAP_BUILD_EXAMPLES}, tests: ${NANOSNAP_BUILD_TESTS}")
 
 if (NANOSNAP_BUILD_TESTS)
   if (NOT IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/doctest/doctest")
     message(FATAL_ERROR "doctest submodule directory is missing!\n"
-      "Please run \"git submodule update --init\" to checkout submodules")
+      "Please run \"git submodule update --init --recursive --depth 1\" to checkout submodules")
   endif ()
 endif (NANOSNAP_BUILD_TESTS)
 
