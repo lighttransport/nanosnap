@@ -10,7 +10,7 @@ TEST_CASE("wav_read_16bit") {
   uint32_t rate;
   std::string dtype;
   uint32_t channels;
-  size_t samples;
+  uint64_t samples;
   std::vector<uint8_t> data;
 
   std::string err;
@@ -39,7 +39,7 @@ TEST_CASE("wav_read_8bit") {
   uint32_t rate;
   std::string dtype;
   uint32_t channels;
-  size_t samples;
+  uint64_t samples;
   std::vector<uint8_t> data;
 
   std::string err;
