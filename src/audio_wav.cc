@@ -205,17 +205,23 @@ bool wav_write(const std::string &filename, const uint32_t rate,
 
   drwav *pwav = drwav_open_file_write(filename.c_str(), &data_format);
   if (!pwav) {
-    (*err) +=
-        "Failed to open WAV file to write. WAV format(channels/rate) is "
-        "invalid or cannot write to disk : " +
-        filename + "\n";
+    if (err) {
+      (*err) +=
+          "Failed to open WAV file to write. WAV format(channels/rate) is "
+          "invalid or cannot write to disk : " +
+          filename + "\n";
+    }
     return false;
   }
 
-  // TODO(LTE): Implement
+  drwav_uint64 sz = drwav_write_pcm_frames(pwav, samples, reinterpret_cast<const void *>(data));
 
-  (void)data;
-  (void)samples;
+  if (sz == 0) {
+    if (err)  {
+      (*err) += "Failed to write PCM frames.\n";
+    }
+    return false;
+  }
 
   drwav_close(pwav);
 
