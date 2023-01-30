@@ -237,3 +237,4 @@ NanoSNAP is licensed under MIT license.
 * c_speech_features : Copyright (c) 2017 Chris Lord. MIT license. https://github.com/Cwiiis/c_speech_features
 * STB image : Public domain. https://github.com/nothings/stb
 * sRGB transform : Copyright (c) 2017 Project Nayuki. (MIT License) https://www.nayuki.io/page/srgb-transform-library
+* fastBPE: Copyright (c) 2019 Guillaume Lample,Timothée Lacroix(MIT License) https://github.com/glample/fastBPE
