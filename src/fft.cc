@@ -359,7 +359,7 @@ bool stft(const float *signal, const size_t sig_len, const size_t n_fft,
 
 bool istft(const std::complex<float> *stft, const size_t ncolumns,
            const size_t nrows, const size_t hop_length, const size_t win_length,
-           std::vector<float> *output, const bool center)
+           std::vector<float> *output, const bool center, const int length)
 {
   size_t n_fft = 2 * (ncolumns -1);
 
@@ -382,8 +382,6 @@ bool istft(const std::complex<float> *stft, const size_t ncolumns,
       return false;
     }
   }
-
-  // TODO(LTE): Implement
 
   size_t n_frames = nrows;
   size_t expected_signal_len = n_fft + hop_length * (n_frames - 1);

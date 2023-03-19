@@ -5,7 +5,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2019 Light Transport Entertainment, Inc.
+Copyright (c) 2019 - Present Light Transport Entertainment, Inc.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -115,8 +115,8 @@ bool ifft(const std::complex<float> *input, const size_t ncolumns, const size_t 
 ///
 /// Assume window function is 'hann' and pad_mode is 'reflect'
 ///
-/// TODO(LTE): Support 'pad' mode.
-/// TODO(LTE): Support window function.
+/// TODO(LTE): Support other 'pad' mode.
+/// TODO(LTE): Support other window function.
 ///
 /// @param[in] signal Input signal(real-value).
 /// @param[in] nsamples The number of samples in input signal.
@@ -141,7 +141,7 @@ bool stft(const float *signal, const size_t nsamples, const size_t n_fft,
 ///
 /// Assume window function is 'hann'
 ///
-/// TODO(LTE): Support window function.
+/// TODO(LTE): Support other window function.
 ///
 /// @param[in] stft Input STFT matrix as 1D array(complex-value).
 /// @param[in] ncolumns The number of columns in stft matrix(`1 + n_fft /2`).
@@ -150,11 +150,12 @@ bool stft(const float *signal, const size_t nsamples, const size_t n_fft,
 /// @param[in] win_length Window length. Default n_fft(=(ncolums-1)*2).
 /// @param[out] output Output signal(real-value).
 /// @param[in] center Optional. Centerize input signal. Default true.
+/// @param[in] length Optional. When > 0, set output length to `length`(zero-padded or clipped)
 /// @return true upon success.
 ///
 bool istft(const std::complex<float> *stft, const size_t ncolumns,
            const size_t nrows, const size_t hop_length, const size_t win_length,
-           std::vector<float> *output, const bool center = true);
+           std::vector<float> *output, const bool center = true, const int length = 0);
 
 }  // namespace nanosnap
 
